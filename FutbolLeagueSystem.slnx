@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="FutbolLeague.API/FutbolLeague.API.csproj" />
+  <Project Path="FutbolLeague.Application/FutbolLeague.Application.csproj" />
+  <Project Path="FutbolLeague.Domain/FutbolLeague.Domain.csproj" />
+  <Project Path="FutbolLeague.Infrastructure/FutbolLeague.Infrastructure.csproj" />
+</Solution>
