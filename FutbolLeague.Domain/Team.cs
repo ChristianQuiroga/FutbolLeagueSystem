@@ -6,6 +6,6 @@
         public string Name { get; set; }
 
         public int CategoryId { get; set; }
-        public Category Category { get; set; }
+        public Category? Category { get; set; }  // ? hace que no sea obligatorio, es decir, puede ser null
     }
 }

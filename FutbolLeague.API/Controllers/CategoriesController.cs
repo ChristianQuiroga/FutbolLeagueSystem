@@ -12,11 +12,14 @@ namespace FutbolLeague.API.Controllers
     {
         private readonly AppDbContext _context;
 
+        // Inyectamos el contexto de la base de datos a través del constructor
         public CategoriesController(AppDbContext context)
         {
             _context = context;
         }
 
+
+        // GET: api/Categories
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -24,6 +27,8 @@ namespace FutbolLeague.API.Controllers
             return Ok(categories);
         }
 
+
+        // POST: api/Categories
         [HttpPost]
         public async Task<IActionResult> Create(Category category)
         {
