@@ -13,12 +13,22 @@ var builder = WebApplication.CreateBuilder(args);
 //builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 
+//Instalamos los paquetes necesarios para Swagger/OpenAPI
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+
+
 // Configurar la conexión a la base de datos!
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql("Host=localhost;Database=FutbolLeagueDB;Username=postgres;Password=1234"));  //Cambiar la cadena de conexión según tu configuración
 
 
 var app = builder.Build();
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
