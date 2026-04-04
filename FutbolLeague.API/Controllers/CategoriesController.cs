@@ -4,6 +4,9 @@ using FutbolLeague.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+using FutbolLeague.Application.DTOs;
+
+
 namespace FutbolLeague.API.Controllers
 {
     [ApiController]
@@ -20,26 +23,58 @@ namespace FutbolLeague.API.Controllers
 
 
         // GET: api/Categories
+        //[HttpGet]
+        //public async Task<IActionResult> GetAll()
+        //{
+        //    var categories = await _context.Categories.ToListAsync();
+        //    return Ok(categories);
+        //}
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var categories = await _context.Categories.ToListAsync();
+            var categories = await _context.Categories
+                .Select(c => new CategoryDto
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                })
+                .ToListAsync();
+
             return Ok(categories);
         }
 
-
         // POST: api/Categories
+        //[HttpPost]
+        //public async Task<IActionResult> Create(Category category)
+        //{
+        //    if(string.IsNullOrEmpty(category.Name))
+        //    {
+        //        return BadRequest("El nombre de la Category es obligatorio.");
+        //    }
+        //    _context.Categories.Add(category);
+        //    await _context.SaveChangesAsync();
+
+        //    return Ok(category);
+        //}
         [HttpPost]
-        public async Task<IActionResult> Create(Category category)
+        public async Task<IActionResult> Create(CreateCategoryDto dto)
         {
-            if(string.IsNullOrEmpty(category.Name))
-            {
+            if (string.IsNullOrEmpty(dto.Name))
                 return BadRequest("El nombre de la Category es obligatorio.");
-            }
+
+            var category = new Category
+            {
+                Name = dto.Name
+            };
+
             _context.Categories.Add(category);
             await _context.SaveChangesAsync();
 
-            return Ok(category);
+            return Ok(new CategoryDto
+            {
+                Id = category.Id,
+                Name = category.Name
+            });
         }
     }
 }
