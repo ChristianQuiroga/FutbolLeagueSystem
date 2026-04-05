@@ -12,5 +12,6 @@ namespace FutbolLeague.Infrastructure.Data
 
         public DbSet<Category> Categories { get; set; }
         public DbSet<Team> Teams { get; set; }
+        public DbSet<Match> Matches { get; set; }
     }
 }

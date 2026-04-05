@@ -62,6 +62,12 @@ namespace FutbolLeague.API.Controllers
             if (string.IsNullOrEmpty(dto.Name))
                 return BadRequest("El nombre de la Category es obligatorio.");
 
+            //La categoria no puede estar duplicada con el mismo nombre.
+            if(await _context.Categories
+                .AnyAsync(c => c.Name == dto.Name)) 
+                return BadRequest("Ya existe esa misma Categoría, esta duplicada");
+            
+
             var category = new Category
             {
                 Name = dto.Name
