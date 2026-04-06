@@ -28,57 +28,85 @@ namespace FutbolLeague.API.Controllers
         {
             var teams = await _context.Teams
                 .Include(t => t.Category)
+                .Include(t => t.Tournament)
                 .Select(t => new TeamDto
                 {
                     Id = t.Id,
                     Name = t.Name,
                     CategoryId = t.CategoryId,
-                    CategoryName = t.Category.Name
+                    CategoryName = t.Category.Name,
+                    TournamentId = t.TournamentId,
+                    TournamentName = t.Tournament.Name
                 })
                 .ToListAsync();
+
             return Ok(teams);
         }
 
 
+
+
         // POST: api/Teams
         [HttpPost]
-        public async Task<IActionResult> Create(TeamDto teamDto)
+        public async Task<IActionResult> Create(CreateTeamDto dto)
         {
+            //Console.WriteLine($"Name: {dto.Name}");
+            //Console.WriteLine($"CategoriaId: {dto.CategoryId}");
+            //Console.WriteLine($"TournamentId: {dto.TournamentId}");
+
+
+            // Validamos que el nombre del equipo no esté vacío
+            if (string.IsNullOrEmpty(dto.Name))
+                return BadRequest("El nombre del equipo es obligatorio");
+
             var categoryExists = await _context.Categories
-                .AnyAsync(c => c.Id == teamDto.CategoryId);
-            
+                .AnyAsync(c => c.Id == dto.CategoryId);
+
             // Validamos que la categoría exista
             if (!categoryExists)
                 return BadRequest("La categoría no existe");
-            
-            // Validamos que el nombre del equipo no esté vacío
-            if (string.IsNullOrEmpty(teamDto.Name))
-                return BadRequest("El nombre del equipo es obligatorio");
+
 
             // El nombre del equipo debe tener al menos 3 caracteres
 
             // El nombre del equipo no puede repetirse dentro de la misma categoría
             if (await _context.Teams
-                .AnyAsync(t => t.Name == teamDto.Name && t.CategoryId == teamDto.CategoryId))
+                .AnyAsync(t => t.Name == dto.Name && t.CategoryId == dto.CategoryId))
                 return BadRequest("Ya existe un equipo con ese nombre en la misma categoría");
+
+            var tournamentExists = await _context.Tournaments
+                .AnyAsync(t => t.Id == dto.TournamentId);
+
+            if (!tournamentExists)
+                return BadRequest("El torneo no existe");
+
 
             var team = new Team
             {
-                Name = teamDto.Name,
-                CategoryId = teamDto.CategoryId
+                Name = dto.Name,
+                CategoryId = dto.CategoryId,
+                TournamentId = dto.TournamentId
             };
 
             _context.Teams.Add(team);
             await _context.SaveChangesAsync();
 
-            return Ok(new TeamDto
-            {
-                Id = team.Id,
-                Name = team.Name,
-                CategoryId = team.CategoryId,
-                //CategoryName = (await _context.Categories.FindAsync(team.CategoryId))?.Name
-                CategoryName = ""
-            });
+            var result = await _context.Teams
+                .Include(t => t.Category)
+                .Include(t => t.Tournament)
+                .Where(t => t.Id == team.Id)
+                .Select(t => new TeamDto
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    CategoryId = t.CategoryId,
+                    CategoryName = t.Category.Name,
+                    TournamentId = t.TournamentId,
+                    TournamentName = t.Tournament.Name
+                })
+            .FirstAsync();
+
+            return Ok(result);
 
         }
     }

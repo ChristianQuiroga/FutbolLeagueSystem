@@ -26,7 +26,7 @@ namespace FutbolLeague.API.Controllers
                 .Include(m => m.AwayTeam)
                 .Select(m => new MatchDto
                 {
-                   Id = m.id,
+                   Id = m.Id,
                     HomeTeam = m.HomeTeam.Name,
                     AwayTeam = m.AwayTeam.Name,
                     HomeScore=m.HomeScore,
