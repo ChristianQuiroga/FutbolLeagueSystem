@@ -7,6 +7,7 @@ namespace FutbolLeague.Application.DTOs
     public class MatchDto
     {
         public int Id { get; set; }
+        public int Round { get; set; } // Vamos a guardar al fecha del partido, para poder ordenar los partidos por fecha
 
         public string HomeTeam { get; set; }
         public string AwayTeam { get; set; }

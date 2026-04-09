@@ -21,5 +21,7 @@ namespace FutbolLeague.Domain
         public int? HomeScore {  get; set; }
         public int? AwayScore { get; set; }
 
+        public int Round { get; set; } // Vamos a guardar la fecha del partido, para poder ordenar los partidos por fecha
+
     }
 }

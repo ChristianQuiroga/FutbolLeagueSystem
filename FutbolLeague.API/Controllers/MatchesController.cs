@@ -24,18 +24,22 @@ namespace FutbolLeague.API.Controllers
             var matches = await _context.Matches
                 .Include(m => m.HomeTeam)
                 .Include(m => m.AwayTeam)
+                .OrderBy(m => m.Round)
+                .ThenBy(m => m.Id)
                 .Select(m => new MatchDto
                 {
-                   Id = m.Id,
+                    Id = m.Id,
+                    Round = m.Round,
                     HomeTeam = m.HomeTeam.Name,
                     AwayTeam = m.AwayTeam.Name,
-                    HomeScore=m.HomeScore,
+                    HomeScore = m.HomeScore,
                     AwayScore = m.AwayScore
                 })
                 .ToListAsync();
 
             return Ok(matches);
         }
+
 
         // Post: api/Matches
         [HttpPost]
@@ -60,6 +64,67 @@ namespace FutbolLeague.API.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(match);
+        }
+
+
+        //Get api/Matches/tournament/{tournamentId}/round/{round}
+        [HttpGet("tournament/{tournamentId}/round/{round}")]
+        public async Task<IActionResult> GetByRound(int tournamentId, int round)
+        {
+            var matches = await _context.Matches
+                .Include(m => m.HomeTeam)
+                .Include(m => m.AwayTeam)
+                .Where(m => m.TournamentId == tournamentId && m.Round == round)
+                .Select(m => new MatchDto
+                {
+                    Id = m.Id,
+                    Round = m.Round,
+                    HomeTeam = m.HomeTeam.Name,
+                    AwayTeam = m.AwayTeam.Name,
+                    HomeScore = m.HomeScore,
+                    AwayScore = m.AwayScore
+                })
+                .ToListAsync();
+
+            if (!matches.Any())
+                return NotFound("No hay partidos para esa ronda");
+
+            //return Ok(matches);
+            return Ok(new
+            {
+                TournamentId = tournamentId,
+                Round = round,
+                Matches = matches
+            });
+        }
+
+        //Put api/Matches/{id}/result
+        //
+        [HttpPut("{id}/result")]
+        public async Task<IActionResult> UpdateResult(int id, UpdateMatchResultDto dto)
+        {
+            //Mejora del método updateResult
+            if(dto.HomeScore < 0 || dto.AwayScore < 0)
+                return BadRequest("Los goles no pueden ser negativos");
+            //
+
+            var match = await _context.Matches.FindAsync(id);
+
+            if (match == null)
+                return NotFound("Partido no encontrado");
+
+            match.HomeScore = dto.HomeScore;
+            match.AwayScore = dto.AwayScore;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                Message = "Resultado actualizado",
+                MatchId = match.Id,
+                HomeScore = match.HomeScore,
+                AwayScore = match.AwayScore
+            });
         }
     }
 }

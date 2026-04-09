@@ -43,27 +43,50 @@ namespace FutbolLeague.API.Controllers
 
             var matches = new List<Match>();
 
-            for (int i = 0; i < teams.Count; i++)
-            {
-                for (int j = i + 1; j < teams.Count; j++)
-                {
-                    matches.Add(new Match
-                    {
-                        TournamentId = dto.TournamentId,
-                        HomeTeamId = teams[i].Id,
-                        AwayTeamId = teams[j].Id
-                    });
+            var teamList = teams.ToList();
 
-                    if (tournament.FixtureFormat == FixtureFormat.DoubleRoundRobin)
+            // Si es impar, agregamos un "bye"
+            if (teamList.Count % 2 != 0)
+                teamList.Add(null);
+
+            int totalTeams = teamList.Count;
+            int rounds = totalTeams - 1;
+            int matchesPerRound = totalTeams / 2;
+
+            for (int round = 1; round <= rounds; round++)
+            {
+                for (int matchIndex = 0; matchIndex < matchesPerRound; matchIndex++)
+                {
+                    var home = teamList[matchIndex];
+                    var away = teamList[totalTeams - 1 - matchIndex];
+
+                    if (home != null && away != null)
                     {
                         matches.Add(new Match
                         {
                             TournamentId = dto.TournamentId,
-                            HomeTeamId = teams[j].Id,
-                            AwayTeamId = teams[i].Id
+                            HomeTeamId = home.Id,
+                            AwayTeamId = away.Id,
+                            Round = round
                         });
+
+                        if (tournament.FixtureFormat == FixtureFormat.DoubleRoundRobin)
+                        {
+                            matches.Add(new Match
+                            {
+                                TournamentId = dto.TournamentId,
+                                HomeTeamId = away.Id,
+                                AwayTeamId = home.Id,
+                                Round = round + rounds
+                            });
+                        }
                     }
                 }
+
+                // Rotación de equipos (excepto el primero)
+                var lastTeam = teamList[totalTeams - 1];
+                teamList.RemoveAt(totalTeams - 1);
+                teamList.Insert(1, lastTeam);
             }
 
             _context.Matches.AddRange(matches);
@@ -75,6 +98,7 @@ namespace FutbolLeague.API.Controllers
                 TournamentName = tournament.Name,
                 Format = tournament.FixtureFormat.ToString(),
                 TeamsCount = teams.Count,
+                RoundsGenerated = tournament.FixtureFormat == FixtureFormat.DoubleRoundRobin ? rounds * 2 : rounds,
                 MatchesGenerated = matches.Count
             });
         }
