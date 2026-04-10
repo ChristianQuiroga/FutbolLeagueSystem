@@ -18,6 +18,8 @@ namespace FutbolLeague.API.Controllers
         }
 
         //Post
+        // Endpoint para generar el fixture de un torneo completo!
+        [Obsolete("Este endpoint es obsoleto. Use /generate-by-category para generar por categoría.")]
         [HttpPost("generate")]
         public async Task<IActionResult> Generate(GenerateFixtureDto dto)
         {
@@ -95,6 +97,103 @@ namespace FutbolLeague.API.Controllers
             return Ok(new
             {
                 TournamentId = dto.TournamentId,
+                TournamentName = tournament.Name,
+                Format = tournament.FixtureFormat.ToString(),
+                TeamsCount = teams.Count,
+                RoundsGenerated = tournament.FixtureFormat == FixtureFormat.DoubleRoundRobin ? rounds * 2 : rounds,
+                MatchesGenerated = matches.Count
+            });
+        }
+
+
+
+        //Agregar nuevo endpoint para generar fixture por categoría
+        //Post
+        [HttpPost("generate-by-category")]
+        public async Task<IActionResult> GenerateByCategory(GenerateFixtureByCategoryDto dto)
+        {
+            var tournament = await _context.Tournaments
+                .FirstOrDefaultAsync(t => t.Id == dto.TournamentId);
+
+            if (tournament == null)
+                return BadRequest("El torneo no existe");
+
+            var categoryExists = await _context.Categories
+                .AnyAsync(c => c.Id == dto.CategoryId);
+
+            if (!categoryExists)
+                return BadRequest("La categoría no existe");
+
+            var teams = await _context.Teams
+                .Where(t => t.TournamentId == dto.TournamentId && t.CategoryId == dto.CategoryId)
+                .OrderBy(t => t.Id)
+                .ToListAsync();
+
+            if (teams.Count < 2)
+                return BadRequest("La categoría necesita al menos 2 equipos para generar fixture");
+
+            var teamIds = teams.Select(t => t.Id).ToList();
+
+            var existingMatches = await _context.Matches
+                .AnyAsync(m => m.TournamentId == dto.TournamentId &&
+                               teamIds.Contains(m.HomeTeamId) &&
+                               teamIds.Contains(m.AwayTeamId));
+
+            if (existingMatches)
+                return BadRequest("Esa categoría ya tiene fixture generado en este torneo");
+
+            var matches = new List<Match>();
+            var teamList = teams.ToList();
+
+            if (teamList.Count % 2 != 0)
+                teamList.Add(null);
+
+            int totalTeams = teamList.Count;
+            int rounds = totalTeams - 1;
+            int matchesPerRound = totalTeams / 2;
+
+            for (int round = 1; round <= rounds; round++)
+            {
+                for (int matchIndex = 0; matchIndex < matchesPerRound; matchIndex++)
+                {
+                    var home = teamList[matchIndex];
+                    var away = teamList[totalTeams - 1 - matchIndex];
+
+                    if (home != null && away != null)
+                    {
+                        matches.Add(new Match
+                        {
+                            TournamentId = dto.TournamentId,
+                            HomeTeamId = home.Id,
+                            AwayTeamId = away.Id,
+                            Round = round
+                        });
+
+                        if (tournament.FixtureFormat == FixtureFormat.DoubleRoundRobin)
+                        {
+                            matches.Add(new Match
+                            {
+                                TournamentId = dto.TournamentId,
+                                HomeTeamId = away.Id,
+                                AwayTeamId = home.Id,
+                                Round = round + rounds
+                            });
+                        }
+                    }
+                }
+
+                var lastTeam = teamList[totalTeams - 1];
+                teamList.RemoveAt(totalTeams - 1);
+                teamList.Insert(1, lastTeam);
+            }
+
+            _context.Matches.AddRange(matches);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                TournamentId = dto.TournamentId,
+                CategoryId = dto.CategoryId,
                 TournamentName = tournament.Name,
                 Format = tournament.FixtureFormat.ToString(),
                 TeamsCount = teams.Count,
