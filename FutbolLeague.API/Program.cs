@@ -20,9 +20,12 @@ builder.Services.AddSwaggerGen();
 
 
 // Configurar la conexión a la base de datos!
+//builder.Services.AddDbContext<AppDbContext>(options =>
+//    options.UseNpgsql("Host=localhost;Database=FutbolLeagueDB;Username=postgres;Password=1234"));  //Cambiar la cadena de conexión según tu configuración
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql("Host=localhost;Database=FutbolLeagueDB;Username=postgres;Password=1234"));  //Cambiar la cadena de conexión según tu configuración
-
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    ));
 
 var app = builder.Build();
 

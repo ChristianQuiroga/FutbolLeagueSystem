@@ -4,6 +4,7 @@ using FutbolLeague.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+//Ctrol + M, O para colapsar todo el código y tener una vista general del controlador
 namespace FutbolLeague.API.Controllers
 {
     [ApiController]
@@ -108,7 +109,7 @@ namespace FutbolLeague.API.Controllers
 
 
         //Agregar nuevo endpoint para generar fixture por categoría
-        //Post
+        //Post "api/fixtures/generate-by-category"
         [HttpPost("generate-by-category")]
         public async Task<IActionResult> GenerateByCategory(GenerateFixtureByCategoryDto dto)
         {
@@ -166,7 +167,8 @@ namespace FutbolLeague.API.Controllers
                             TournamentId = dto.TournamentId,
                             HomeTeamId = home.Id,
                             AwayTeamId = away.Id,
-                            Round = round
+                            Round = round,
+                            Status = MatchStatus.Pending
                         });
 
                         if (tournament.FixtureFormat == FixtureFormat.DoubleRoundRobin)
@@ -176,7 +178,8 @@ namespace FutbolLeague.API.Controllers
                                 TournamentId = dto.TournamentId,
                                 HomeTeamId = away.Id,
                                 AwayTeamId = home.Id,
-                                Round = round + rounds
+                                Round = round + rounds,
+                                Status = MatchStatus.Pending
                             });
                         }
                     }
@@ -199,6 +202,129 @@ namespace FutbolLeague.API.Controllers
                 TeamsCount = teams.Count,
                 RoundsGenerated = tournament.FixtureFormat == FixtureFormat.DoubleRoundRobin ? rounds * 2 : rounds,
                 MatchesGenerated = matches.Count
+            });
+        }
+
+
+        // Endpoint para asignar fechas a los partidos de un torneo y categoría específicos
+        //Post "api/fixtures/assign-dates"
+        [HttpPost("assign-dates")]
+        public async Task<IActionResult> AssignDates(AssignMatchDatesDto dto)
+        {
+            var matches = await _context.Matches
+                .Include(m => m.HomeTeam)
+                .Where(m => m.TournamentId == dto.TournamentId
+                            && m.HomeTeam.CategoryId == dto.CategoryId)
+                .OrderBy(m => m.Round)
+                .ThenBy(m => m.Id)
+                .ToListAsync();
+
+            if (!matches.Any())
+                return NotFound("No hay partidos para ese torneo y categoría");
+
+            var rounds = matches
+                .GroupBy(m => m.Round)
+                .OrderBy(g => g.Key)
+                .ToList();
+
+            DateTime currentRoundDate = dto.StartDate.Date;
+
+            foreach (var roundGroup in rounds)
+            {
+                DateTime currentDateTime = currentRoundDate + dto.MorningStartTime;
+
+                foreach (var match in roundGroup)
+                {
+                    if (currentDateTime.TimeOfDay >= dto.LunchBreakStartTime &&
+                        currentDateTime.TimeOfDay < dto.AfternoonStartTime)
+                    {
+                        currentDateTime = currentRoundDate + dto.AfternoonStartTime;
+                    }
+
+                    match.MatchDate = currentDateTime;
+                    currentDateTime = currentDateTime.AddMinutes(dto.MinutesBetweenMatches);
+
+                    if (currentDateTime.TimeOfDay >= dto.LunchBreakStartTime &&
+                        currentDateTime.TimeOfDay < dto.AfternoonStartTime)
+                    {
+                        currentDateTime = currentRoundDate + dto.AfternoonStartTime;
+                    }
+                }
+
+                currentRoundDate = currentRoundDate.AddDays(7);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                Message = "Fechas asignadas correctamente",
+                TournamentId = dto.TournamentId,
+                CategoryId = dto.CategoryId,
+                TotalMatches = matches.Count
+            });
+        }
+
+
+        //Post "api/fixtures/assign-fields"
+        // Endpoint para asignar canchas a los partidos de un torneo y categoría específicos
+        [HttpPost("assign-fields")]
+        public async Task<IActionResult> AssignFields(int tournamentId, int categoryId)
+        {
+            var fields = await _context.Fields.ToListAsync();
+
+            if (!fields.Any())
+                return BadRequest("No hay canchas cargadas");
+
+            var matches = await _context.Matches
+                .Include(m => m.HomeTeam)
+                .Where(m => m.TournamentId == tournamentId &&
+                            m.HomeTeam.CategoryId == categoryId)
+                .OrderBy(m => m.Round)
+                .ThenBy(m => m.MatchDate)
+                .ToListAsync();
+
+            if (!matches.Any())
+                return NotFound("No hay partidos");
+
+            var groupedByRound = matches
+                .GroupBy(m => m.Round)
+                .ToList();
+
+            foreach (var round in groupedByRound)
+            {
+                int fieldIndex = 0;
+
+                foreach (var match in round)
+                {
+                    //match.FieldId = fields[fieldIndex].Id
+                    // Antes de asignar, verificamos que no haya otro partido en la misma fecha con la misma cancha
+                    var field = fields[fieldIndex];
+
+                    var conflict = matches.Any(m =>
+                        m.Id != match.Id &&
+                        m.FieldId == field.Id &&
+                        m.MatchDate == match.MatchDate);
+
+                    if (!conflict)
+                    {
+                        match.FieldId = field.Id;
+                    }
+                    // Si hay conflicto, se deja sin asignar para que el administrador lo resuelva manualmente
+
+                    fieldIndex++;
+
+                    if (fieldIndex >= fields.Count)
+                        fieldIndex = 0;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                Message = "Canchas asignadas automáticamente",
+                MatchesUpdated = matches.Count
             });
         }
     }

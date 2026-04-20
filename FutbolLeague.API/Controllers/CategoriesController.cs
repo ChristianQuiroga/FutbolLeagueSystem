@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 using FutbolLeague.Application.DTOs;
 
-
+//Ctrol + M, O para colapsar todo el código y tener una vista general del controlador
 namespace FutbolLeague.API.Controllers
 {
     [ApiController]

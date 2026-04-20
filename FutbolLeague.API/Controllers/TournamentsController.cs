@@ -4,6 +4,7 @@ using FutbolLeague.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+//Ctrol + M, O para colapsar todo el código y tener una vista general del controlador
 namespace FutbolLeague.API.Controllers
 {
     /// Controller for managing tournaments in the football league application

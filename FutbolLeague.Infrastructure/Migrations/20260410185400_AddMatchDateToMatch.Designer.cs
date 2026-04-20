@@ -3,6 +3,7 @@ using System;
 using FutbolLeague.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FutbolLeague.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260410185400_AddMatchDateToMatch")]
+    partial class AddMatchDateToMatch
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -39,23 +42,6 @@ namespace FutbolLeague.Infrastructure.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("FutbolLeague.Domain.Field", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Fields");
-                });
-
             modelBuilder.Entity("FutbolLeague.Domain.Match", b =>
                 {
                     b.Property<int>("Id")
@@ -68,9 +54,6 @@ namespace FutbolLeague.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("AwayTeamId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("FieldId")
                         .HasColumnType("integer");
 
                     b.Property<int?>("HomeScore")
@@ -94,8 +77,6 @@ namespace FutbolLeague.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AwayTeamId");
-
-                    b.HasIndex("FieldId");
 
                     b.HasIndex("HomeTeamId");
 
@@ -162,10 +143,6 @@ namespace FutbolLeague.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FutbolLeague.Domain.Field", "Field")
-                        .WithMany()
-                        .HasForeignKey("FieldId");
-
                     b.HasOne("FutbolLeague.Domain.Team", "HomeTeam")
                         .WithMany()
                         .HasForeignKey("HomeTeamId")
@@ -179,8 +156,6 @@ namespace FutbolLeague.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("AwayTeam");
-
-                    b.Navigation("Field");
 
                     b.Navigation("HomeTeam");
 

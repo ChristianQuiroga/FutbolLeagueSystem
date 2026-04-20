@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FutbolLeague.API.Controllers
 {
+    //Ctrol + M, O para colapsar todo el código y tener una vista general del controlador
+
     [ApiController]
     [Route("api/[controller]")]
     public class MatchesController : ControllerBase
@@ -35,7 +37,10 @@ namespace FutbolLeague.API.Controllers
                     HomeTeam = m.HomeTeam.Name,
                     AwayTeam = m.AwayTeam.Name,
                     HomeScore = m.HomeScore,
-                    AwayScore = m.AwayScore
+                    AwayScore = m.AwayScore,
+                    Status = m.Status.ToString(), //Devolvemos el estado como string para mayor claridad
+                    MatchDate = m.MatchDate, //Incluimos la fecha del partido en el DTO
+                    Field = m.Field != null ? m.Field.Name : null //Incluimos el nombre del campo si existe
                 })
                 .ToListAsync();
 
@@ -87,7 +92,10 @@ namespace FutbolLeague.API.Controllers
                     HomeTeam = m.HomeTeam.Name,
                     AwayTeam = m.AwayTeam.Name,
                     HomeScore = m.HomeScore,
-                    AwayScore = m.AwayScore
+                    AwayScore = m.AwayScore,
+                    Status = m.Status.ToString(), //Devolvemos el estado como string para mayor claridad
+                    MatchDate = m.MatchDate, //Incluimos la fecha del partido en el DTO
+                    Field = m.Field != null ? m.Field.Name : null //Incluimos el nombre del campo si existe
                 })
                 .ToListAsync();
 
@@ -102,6 +110,8 @@ namespace FutbolLeague.API.Controllers
                 Matches = matches
             });
         }
+
+
 
         //Get api/Matches/tournament/{tournamentId}/category/{categoryId}/round/{round}
         //Mejora del método GetByTournamentCategoryAndRound para incluir el nombre de los equipos y devolver un objeto con la información del torneo, categoría, ronda y partidos
@@ -123,7 +133,10 @@ namespace FutbolLeague.API.Controllers
                     HomeTeam = m.HomeTeam.Name,
                     AwayTeam = m.AwayTeam.Name,
                     HomeScore = m.HomeScore,
-                    AwayScore = m.AwayScore
+                    AwayScore = m.AwayScore,
+                    Status = m.Status.ToString(), //Devolvemos el estado como string para mayor claridad
+                    MatchDate = m.MatchDate, //Incluimos la fecha del partido en el DTO
+                    Field = m.Field != null ? m.Field.Name : null //Incluimos el nombre del campo si existe
                 })
                 .ToListAsync();
 
@@ -138,6 +151,7 @@ namespace FutbolLeague.API.Controllers
             });
 
         }
+
 
 
         //Get api/Matches/tournament/{tournamentId}/category/{categoryId}
@@ -161,7 +175,10 @@ namespace FutbolLeague.API.Controllers
                     HomeTeam = m.HomeTeam.Name,
                     AwayTeam = m.AwayTeam.Name,
                     HomeScore = m.HomeScore,
-                    AwayScore = m.AwayScore
+                    AwayScore = m.AwayScore,
+                    Status = m.Status.ToString(), //Devolvemos el estado como string para mayor claridad
+                    MatchDate = m.MatchDate, //Incluimos la fecha del partido en el DTO  
+                    Field = m.Field != null ? m.Field.Name : null //Incluimos el nombre del campo si existe
                 })
                 .ToListAsync();
 
@@ -170,6 +187,8 @@ namespace FutbolLeague.API.Controllers
 
             return Ok(matches);
         }
+
+
 
 
         //Put api/Matches/{id}/result
@@ -189,6 +208,7 @@ namespace FutbolLeague.API.Controllers
 
             match.HomeScore = dto.HomeScore;
             match.AwayScore = dto.AwayScore;
+            match.Status = MatchStatus.Played; //Enun jugado.
 
             await _context.SaveChangesAsync();
 
@@ -197,11 +217,92 @@ namespace FutbolLeague.API.Controllers
                 Message = "Resultado actualizado",
                 MatchId = match.Id,
                 HomeScore = match.HomeScore,
-                AwayScore = match.AwayScore
+                AwayScore = match.AwayScore,
+                Status = match.Status.ToString() //Devolvemos el estado como string para mayor claridad
             });
         }
 
 
+        //Put api/Matches/{id}/status
+        //Put endpoint para actualizar la fecha de un partido
+        [HttpPut("{id}/date")]
+        public async Task<IActionResult> UpdateDate(int id, UpdateMatchDateDto dto)
+        {
+            var match = await _context.Matches.FindAsync(id);
+            
+            if (match == null)
+                return NotFound("Partido no encontrado");
+            
+            match.MatchDate = dto.UpdateDate;
+            
+            await _context.SaveChangesAsync();
+            
+            return Ok(new
+            {
+                Message = "Fecha del partido actualizada correctamente",
+                MatchId = match.Id,
+                MatchDate = match.MatchDate
+            });
+        }
+
+
+
+        //Put api/Matches/{id}/field
+        //Put endpoint para actualizar el campo de un partido
+        //[HttpPut("{id}/field")]
+        //public async Task<IActionResult> AssignField(int id, AssignFieldDto dto)
+        //{
+        //    var match = await _context.Matches.FindAsync(id);
+
+        //    if (match == null)
+        //        return NotFound("Partido no encontrado");
+
+        //    var fieldExists = await _context.Fields.AnyAsync(f => f.Id == dto.FieldId);
+
+        //    if (!fieldExists)
+        //        return BadRequest("La cancha no existe");
+
+        //    match.FieldId = dto.FieldId;
+
+        //    await _context.SaveChangesAsync();
+
+        //    return Ok(new
+        //    {
+        //        Message = "Cancha asignada correctamente",
+        //        MatchId = match.Id,
+        //        FieldId = match.FieldId
+        //    });
+        //}
+        [HttpPut("{id}/field")]
+        public async Task<IActionResult> AssignField(int id, AssignFieldDto dto)
+        {
+            var match = await _context.Matches.FindAsync(id);
+
+            if (match == null)
+                return NotFound("Partido no encontrado");
+
+            if (!match.MatchDate.HasValue)
+                return BadRequest("El partido no tiene fecha asignada");
+
+            var conflict = await _context.Matches
+                .AnyAsync(m =>
+                    m.Id != id &&
+                    m.FieldId == dto.FieldId &&
+                    m.MatchDate == match.MatchDate);
+
+            if (conflict)
+                return BadRequest("Ya existe un partido en esa cancha y horario");
+
+            match.FieldId = dto.FieldId;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                Message = "Cancha asignada correctamente",
+                MatchId = match.Id
+            });
+        }
 
     }
 }
