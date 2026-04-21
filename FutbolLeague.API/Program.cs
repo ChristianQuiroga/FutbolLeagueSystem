@@ -2,6 +2,7 @@
 // Conectar tu API con la base de datos usando Entity Framework Core
 using FutbolLeague.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using FutbolLeague.Application.Services;
 
 
 
@@ -12,6 +13,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 //builder.Services.AddOpenApi();
 builder.Services.AddControllers();
+builder.Services.AddScoped<IStandingService, StandingService>(); // Agregar el servicio de StandingService a la inyección de dependencias
+
 
 //Instalamos los paquetes necesarios para Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();

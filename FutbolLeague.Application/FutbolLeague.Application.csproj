@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FutbolLeague.Domain\FutbolLeague.Domain.csproj" />
+    <ProjectReference Include="..\FutbolLeague.Infrastructure\FutbolLeague.Infrastructure.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
