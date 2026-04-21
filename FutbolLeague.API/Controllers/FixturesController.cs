@@ -135,13 +135,29 @@ namespace FutbolLeague.API.Controllers
 
             var teamIds = teams.Select(t => t.Id).ToList();
 
-            var existingMatches = await _context.Matches
-                .AnyAsync(m => m.TournamentId == dto.TournamentId &&
-                               teamIds.Contains(m.HomeTeamId) &&
-                               teamIds.Contains(m.AwayTeamId));
+            //var existingMatches = await _context.Matches
+            //    .AnyAsync(m => m.TournamentId == dto.TournamentId &&
+            //                   teamIds.Contains(m.HomeTeamId) &&
+            //                   teamIds.Contains(m.AwayTeamId));
 
-            if (existingMatches)
+            //if (existingMatches)
+            //    return BadRequest("Esa categoría ya tiene fixture generado en este torneo");
+            var existingMatches = await _context.Matches
+                .Where(m => m.TournamentId == dto.TournamentId &&
+                        teamIds.Contains(m.HomeTeamId) &&
+                        teamIds.Contains(m.AwayTeamId))
+                .ToListAsync();
+
+            if (existingMatches.Any(m => m.Status == MatchStatus.Played))
+            {
+                return BadRequest("No se puede regenerar el fixture porque ya hay partidos jugados en esta categoría");
+            }
+
+            if (existingMatches.Any())
+            {
                 return BadRequest("Esa categoría ya tiene fixture generado en este torneo");
+            }
+            //
 
             var matches = new List<Match>();
             var teamList = teams.ToList();
@@ -325,6 +341,45 @@ namespace FutbolLeague.API.Controllers
             {
                 Message = "Canchas asignadas automáticamente",
                 MatchesUpdated = matches.Count
+            });
+        }
+
+
+        //Delete "api/fixtures/tournament/{tournamentId}/category/{categoryId}"
+        // Endpoint para eliminar el fixture de un torneo y categoría específicos
+        [HttpDelete("tournament/{tournamentId}/category/{categoryId}")]
+        public async Task<IActionResult> DeleteFixtureByCategory(int tournamentId, int categoryId)
+        {
+            var teams = await _context.Teams
+                .Where(t => t.TournamentId == tournamentId && t.CategoryId == categoryId)
+                .ToListAsync();
+
+            if (!teams.Any())
+                return NotFound("No hay equipos para ese torneo y categoría");
+
+            var teamIds = teams.Select(t => t.Id).ToList();
+
+            var matches = await _context.Matches
+                .Where(m => m.TournamentId == tournamentId &&
+                            teamIds.Contains(m.HomeTeamId) &&
+                            teamIds.Contains(m.AwayTeamId))
+                .ToListAsync();
+
+            if (!matches.Any())
+                return NotFound("No hay fixture generado para ese torneo y categoría");
+
+            if (matches.Any(m => m.Status == MatchStatus.Played))
+                return BadRequest("No se puede eliminar el fixture porque ya hay partidos jugados en esta categoría");
+
+            _context.Matches.RemoveRange(matches);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                Message = "Fixture eliminado correctamente",
+                TournamentId = tournamentId,
+                CategoryId = categoryId,
+                MatchesDeleted = matches.Count
             });
         }
     }
