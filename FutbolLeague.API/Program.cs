@@ -14,6 +14,8 @@ var builder = WebApplication.CreateBuilder(args);
 //builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 builder.Services.AddScoped<IStandingService, StandingService>(); // Agregar el servicio de StandingService a la inyección de dependencias
+builder.Services.AddScoped<IFixtureService, FixtureService>(); // Agregar el servicio de FixtureService a la inyección de dependencias
+
 
 
 //Instalamos los paquetes necesarios para Swagger/OpenAPI

@@ -3,7 +3,6 @@ using FutbolLeague.Domain;
 using FutbolLeague.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
 using FutbolLeague.Application.DTOs;
 
 //Ctrol + M, O para colapsar todo el código y tener una vista general del controlador
@@ -23,12 +22,7 @@ namespace FutbolLeague.API.Controllers
 
 
         // GET: api/Categories
-        //[HttpGet]
-        //public async Task<IActionResult> GetAll()
-        //{
-        //    var categories = await _context.Categories.ToListAsync();
-        //    return Ok(categories);
-        //}
+        // Obtiene todas las categorías
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -43,19 +37,9 @@ namespace FutbolLeague.API.Controllers
             return Ok(categories);
         }
 
-        // POST: api/Categories
-        //[HttpPost]
-        //public async Task<IActionResult> Create(Category category)
-        //{
-        //    if(string.IsNullOrEmpty(category.Name))
-        //    {
-        //        return BadRequest("El nombre de la Category es obligatorio.");
-        //    }
-        //    _context.Categories.Add(category);
-        //    await _context.SaveChangesAsync();
 
-        //    return Ok(category);
-        //}
+        // POST: api/Categories
+        // Crea una nueva categoría
         [HttpPost]
         public async Task<IActionResult> Create(CreateCategoryDto dto)
         {

@@ -21,6 +21,7 @@ namespace FutbolLeague.API.Controllers
 
 
         // GET: api/tournaments
+        // Devuelve la lista de torneos disponibles con su formato de fixture
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -39,6 +40,7 @@ namespace FutbolLeague.API.Controllers
 
 
         // POST: api/tournaments
+        // Crea un nuevo torneo con el nombre y formato de fixture especificados
         [HttpPost]
         public async Task<IActionResult> Create(CreateTournamentDto dto)
         {
@@ -78,7 +80,6 @@ namespace FutbolLeague.API.Controllers
 
         // GET: api/tournaments/{tournamentId}/summary/{categoryId}
         // Devuelve un resumen del torneo para una categoría específica, incluyendo próximos partidos, últimos resultados, standings y estadísticas
-
         [HttpGet("{tournamentId}/summary/{categoryId}")]
         public async Task<IActionResult> GetSummary(int tournamentId, int categoryId)
         {
