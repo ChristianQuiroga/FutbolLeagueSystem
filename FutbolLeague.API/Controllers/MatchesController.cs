@@ -248,31 +248,7 @@ namespace FutbolLeague.API.Controllers
 
 
         //Put api/Matches/{id}/field
-        //Put endpoint para actualizar el campo de un partido
-        //[HttpPut("{id}/field")]
-        //public async Task<IActionResult> AssignField(int id, AssignFieldDto dto)
-        //{
-        //    var match = await _context.Matches.FindAsync(id);
-
-        //    if (match == null)
-        //        return NotFound("Partido no encontrado");
-
-        //    var fieldExists = await _context.Fields.AnyAsync(f => f.Id == dto.FieldId);
-
-        //    if (!fieldExists)
-        //        return BadRequest("La cancha no existe");
-
-        //    match.FieldId = dto.FieldId;
-
-        //    await _context.SaveChangesAsync();
-
-        //    return Ok(new
-        //    {
-        //        Message = "Cancha asignada correctamente",
-        //        MatchId = match.Id,
-        //        FieldId = match.FieldId
-        //    });
-        //}
+        //Put endpoint para asignar una cancha a un partido, validando que no haya conflictos de horarios con otros partidos en la misma cancha
         [HttpPut("{id}/field")]
         public async Task<IActionResult> AssignField(int id, AssignFieldDto dto)
         {
@@ -301,6 +277,85 @@ namespace FutbolLeague.API.Controllers
             {
                 Message = "Cancha asignada correctamente",
                 MatchId = match.Id
+            });
+        }
+
+
+        //Get api/Matches/tournament/{tournamentId}/status/{status}
+        //Mejora del método GetByStatus para validar el estado y devolver un mensaje más claro si no hay partidos con ese estado
+        [HttpGet("tournament/{tournamentId}/status/{status}")]
+        public async Task<IActionResult> GetByStatus(int tournamentId, string status)
+        {
+            if (!Enum.TryParse<MatchStatus>(status, true, out var parsedStatus))
+                return BadRequest("Estado inválido. Usar: Pending o Played");
+
+            var matches = await _context.Matches
+                .Include(m => m.HomeTeam)
+                .Include(m => m.AwayTeam)
+                .Where(m => m.TournamentId == tournamentId && m.Status == parsedStatus)
+                .OrderBy(m => m.Round)
+                .ThenBy(m => m.MatchDate)
+                .Select(m => new MatchDto
+                {
+                    Id = m.Id,
+                    Round = m.Round,
+                    HomeTeam = m.HomeTeam.Name,
+                    AwayTeam = m.AwayTeam.Name,
+                    HomeScore = m.HomeScore,
+                    AwayScore = m.AwayScore,
+                    Status = m.Status.ToString(),
+                    MatchDate = m.MatchDate
+                })
+                .ToListAsync();
+
+            if (!matches.Any())
+                return NotFound("No hay partidos con ese estado");
+
+            return Ok(matches);
+        }
+
+
+        //Get api/Matches/tournament/{tournamentId}/category/{categoryId}/status/{status}
+        //Mejora del método GetByTournamentCategoryAndStatus para validar el estado y devolver un mensaje más claro si no hay partidos con ese estado, torneo y categoría
+        [HttpGet("tournament/{tournamentId}/category/{categoryId}/status/{status}")]
+        public async Task<IActionResult> GetByTournamentCategoryAndStatus(int tournamentId, int categoryId, string status)
+        {
+            if (!Enum.TryParse<MatchStatus>(status, true, out var parsedStatus))
+                return BadRequest("Estado inválido. Usar: Pending o Played");
+
+            var matches = await _context.Matches
+                .Include(m => m.HomeTeam)
+                .Include(m => m.AwayTeam)
+                .Include(m => m.Field)
+                .Where(m => m.TournamentId == tournamentId
+                            && m.Status == parsedStatus
+                            && m.HomeTeam.CategoryId == categoryId
+                            && m.AwayTeam.CategoryId == categoryId)
+                .OrderBy(m => m.Round)
+                .ThenBy(m => m.MatchDate)
+                .Select(m => new MatchDto
+                {
+                    Id = m.Id,
+                    Round = m.Round,
+                    HomeTeam = m.HomeTeam.Name,
+                    AwayTeam = m.AwayTeam.Name,
+                    HomeScore = m.HomeScore,
+                    AwayScore = m.AwayScore,
+                    Status = m.Status.ToString(),
+                    MatchDate = m.MatchDate,
+                    Field = m.Field != null ? m.Field.Name : null
+                })
+                .ToListAsync();
+
+            if (!matches.Any())
+                return NotFound("No hay partidos para ese torneo, categoría y estado");
+
+            return Ok(new
+            {
+                TournamentId = tournamentId,
+                CategoryId = categoryId,
+                Status = parsedStatus.ToString(),
+                Matches = matches
             });
         }
 
