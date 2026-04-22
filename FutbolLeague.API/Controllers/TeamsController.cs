@@ -25,7 +25,9 @@ namespace FutbolLeague.API.Controllers
         //Dtos: Data Transfer Objects, son objetos que se utilizan para transferir datos entre capas de una aplicación, especialmente entre la capa de presentación y la capa de negocio o de acceso a datos. Los DTOs suelen ser clases simples que contienen propiedades para representar los datos que se desean transferir, sin incluir lógica de negocio ni métodos complejos. El uso de DTOs ayuda a desacoplar las diferentes capas de la aplicación, mejorar la seguridad al exponer solo los datos necesarios y facilitar la serialización y deserialización de datos en formatos como JSON o XML.
         [HttpGet]
         public async Task<IActionResult> GetAll()
-        {
+        { 
+            //throw new Exception("Error de prueba");
+
             var teams = await _context.Teams
                 .Include(t => t.Category)
                 .Include(t => t.Tournament)
