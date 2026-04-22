@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace FutbolLeague.API.Controllers
 {
     //Ctrol + M, O para colapsar todo el código y tener una vista general del controlador
+    //Ctrol + M, P para expandir todo el código y ver los detalles de cada método
 
     [ApiController]
     [Route("api/[controller]")]
@@ -14,9 +15,13 @@ namespace FutbolLeague.API.Controllers
     {
         // Inyectamos el contexto de la base de datos a través del constructor
         private readonly AppDbContext _context;
-        public MatchesController(AppDbContext context)
+        private readonly ILogger<MatchesController> _logger; // Inyección de logger
+
+        //Constructor del controlador con inyección de dependencias
+        public MatchesController(AppDbContext context, ILogger<MatchesController> logger) //Inyectamos el logger en el constructor
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: api/Matches/{id}
@@ -193,32 +198,75 @@ namespace FutbolLeague.API.Controllers
 
         //Put api/Matches/{id}/result
         //Mejora del método updateResult para validar que los goles no sean negativos y devolver un mensaje más detallado al actualizar el resultado
+        //[HttpPut("{id}/result")]
+        //public async Task<IActionResult> UpdateResult(int id, UpdateMatchResultDto dto)
+        //{
+        //    //Mejora del método updateResult
+        //    if (dto.HomeScore < 0 || dto.AwayScore < 0)
+        //        return BadRequest("Los goles no pueden ser negativos");
+        //    //
+
+        //    var match = await _context.Matches.FindAsync(id);
+
+        //    if (match == null)
+        //        return NotFound("Partido no encontrado");
+
+        //    match.HomeScore = dto.HomeScore;
+        //    match.AwayScore = dto.AwayScore;
+        //    match.Status = MatchStatus.Played; //Enun jugado.
+
+        //    await _context.SaveChangesAsync();
+
+        //    return Ok(new
+        //    {
+        //        Message = "Resultado actualizado",
+        //        MatchId = match.Id,
+        //        HomeScore = match.HomeScore,
+        //        AwayScore = match.AwayScore,
+        //        Status = match.Status.ToString() //Devolvemos el estado como string para mayor claridad
+        //    });
+        //}
         [HttpPut("{id}/result")]
         public async Task<IActionResult> UpdateResult(int id, UpdateMatchResultDto dto)
         {
-            //Mejora del método updateResult
             if (dto.HomeScore < 0 || dto.AwayScore < 0)
+            {
+                _logger.LogWarning(
+                    "Intento de cargar resultado inválido para MatchId={MatchId}. HomeScore={HomeScore}, AwayScore={AwayScore}",
+                    id,
+                    dto.HomeScore,
+                    dto.AwayScore);
+
                 return BadRequest("Los goles no pueden ser negativos");
-            //
+            }
 
             var match = await _context.Matches.FindAsync(id);
 
             if (match == null)
+            {
+                _logger.LogWarning("NoXXX se encontró MatchId={MatchId} para actualizar resultado", id);
                 return NotFound("Partido no encontrado");
+            }
 
             match.HomeScore = dto.HomeScore;
             match.AwayScore = dto.AwayScore;
-            match.Status = MatchStatus.Played; //Enun jugado.
+            match.Status = MatchStatus.Played;
 
             await _context.SaveChangesAsync();
 
+            _logger.LogInformation(
+                "ResultadoXXX actualizado para MatchId={MatchId}. HomeScore={HomeScore}, AwayScore={AwayScore}",
+                match.Id,
+                match.HomeScore,
+                match.AwayScore);
+
             return Ok(new
             {
-                Message = "Resultado actualizado",
+                Message = "Resultado actualizado correctamente",
                 MatchId = match.Id,
                 HomeScore = match.HomeScore,
                 AwayScore = match.AwayScore,
-                Status = match.Status.ToString() //Devolvemos el estado como string para mayor claridad
+                Status = match.Status.ToString()
             });
         }
 
