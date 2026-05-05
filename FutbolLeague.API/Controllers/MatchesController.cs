@@ -1,4 +1,6 @@
 ﻿using FutbolLeague.Application.DTOs;
+using FutbolLeague.Application.Exceptions;
+using FutbolLeague.Application.Services;
 using FutbolLeague.Domain;
 using FutbolLeague.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -8,21 +10,25 @@ namespace FutbolLeague.API.Controllers
 {
     //Ctrol + M, O para colapsar todo el código y tener una vista general del controlador
     //Ctrol + M, P para expandir todo el código y ver los detalles de cada método
+    //Ctrol + K, D para organizar el código y mejorar la legibilidad
 
     [ApiController]
     [Route("api/[controller]")]
     public class MatchesController : ControllerBase
     {
         // Inyectamos el contexto de la base de datos a través del constructor
-        private readonly AppDbContext _context;
+        private readonly AppDbContext _context; // Inyección de contexto de base de datos
+        private readonly IMatchService _matchService; // Inyección del servicio de gestión de partidos
         private readonly ILogger<MatchesController> _logger; // Inyección de logger
 
         //Constructor del controlador con inyección de dependencias
-        public MatchesController(AppDbContext context, ILogger<MatchesController> logger) //Inyectamos el logger en el constructor
+        public MatchesController(AppDbContext context, IMatchService matchService, ILogger<MatchesController> logger)
         {
             _context = context;
+            _matchService = matchService;
             _logger = logger;
         }
+
 
         // GET: api/Matches/{id}
         //GET: api/Matches
@@ -59,13 +65,15 @@ namespace FutbolLeague.API.Controllers
         public async Task<IActionResult> Create(CreateMatchDto dto)
         {
             if (dto.HomeTeamId == dto.AwayTeamId)
-                return BadRequest("Un equipo no puede jugar contra sí mismo");
+                //return BadRequest("Un equipo no puede jugar contra sí mismo");
+                throw new BusinessException("Un equipo no puede jugar contra sí mismo");
 
             var homeExists = await _context.Teams.AnyAsync(t => t.Id == dto.HomeTeamId);
             var awayExists = await _context.Teams.AnyAsync(t => t.Id == dto.AwayTeamId);
 
             if (!homeExists || !awayExists)
-                return BadRequest("Uno de los equipos no existe");
+                //return BadRequest("Uno de los equipos no existe");
+                throw new NotFoundException("Uno de los equipos no existe");
 
             var match = new Match
             {
@@ -226,73 +234,78 @@ namespace FutbolLeague.API.Controllers
         //        Status = match.Status.ToString() //Devolvemos el estado como string para mayor claridad
         //    });
         //}
+
+        //[HttpPut("{id}/result")]
+        //public async Task<IActionResult> UpdateResult(int id, UpdateMatchResultDto dto)
+        //{
+        //    if (dto.HomeScore < 0 || dto.AwayScore < 0)
+        //    {
+        //        _logger.LogWarning(
+        //            "Intento de cargar resultado inválido para MatchId={MatchId}. HomeScore={HomeScore}, AwayScore={AwayScore}",
+        //            id,
+        //            dto.HomeScore,
+        //            dto.AwayScore);
+
+        //        return BadRequest("Los goles no pueden ser negativos");
+        //    }
+
+        //    var match = await _context.Matches.FindAsync(id);
+
+        //    if (match == null)
+        //    {
+        //        _logger.LogWarning("NoXXX se encontró MatchId={MatchId} para actualizar resultado", id);
+        //        return NotFound("Partido no encontrado");
+        //    }
+
+        //    match.HomeScore = dto.HomeScore;
+        //    match.AwayScore = dto.AwayScore;
+        //    match.Status = MatchStatus.Played;
+
+        //    await _context.SaveChangesAsync();
+
+        //    _logger.LogInformation(
+        //        "ResultadoXXX actualizado para MatchId={MatchId}. HomeScore={HomeScore}, AwayScore={AwayScore}",
+        //        match.Id,
+        //        match.HomeScore,
+        //        match.AwayScore);
+
+        //    return Ok(new
+        //    {
+        //        Message = "Resultado actualizado correctamente",
+        //        MatchId = match.Id,
+        //        HomeScore = match.HomeScore,
+        //        AwayScore = match.AwayScore,
+        //        Status = match.Status.ToString()
+        //    });
+        //}
+
         [HttpPut("{id}/result")]
         public async Task<IActionResult> UpdateResult(int id, UpdateMatchResultDto dto)
         {
-            if (dto.HomeScore < 0 || dto.AwayScore < 0)
-            {
-                _logger.LogWarning(
-                    "Intento de cargar resultado inválido para MatchId={MatchId}. HomeScore={HomeScore}, AwayScore={AwayScore}",
-                    id,
-                    dto.HomeScore,
-                    dto.AwayScore);
+            _logger.LogInformation("Actualizando resultado para MatchId={MatchId}", id);
 
-                return BadRequest("Los goles no pueden ser negativos");
-            }
+            var result = await _matchService.UpdateResultAsync(id, dto);
 
-            var match = await _context.Matches.FindAsync(id);
-
-            if (match == null)
-            {
-                _logger.LogWarning("NoXXX se encontró MatchId={MatchId} para actualizar resultado", id);
-                return NotFound("Partido no encontrado");
-            }
-
-            match.HomeScore = dto.HomeScore;
-            match.AwayScore = dto.AwayScore;
-            match.Status = MatchStatus.Played;
-
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation(
-                "ResultadoXXX actualizado para MatchId={MatchId}. HomeScore={HomeScore}, AwayScore={AwayScore}",
-                match.Id,
-                match.HomeScore,
-                match.AwayScore);
-
-            return Ok(new
-            {
-                Message = "Resultado actualizado correctamente",
-                MatchId = match.Id,
-                HomeScore = match.HomeScore,
-                AwayScore = match.AwayScore,
-                Status = match.Status.ToString()
-            });
+            return Ok(result);
         }
 
-
-        //Put api/Matches/{id}/status
-        //Put endpoint para actualizar la fecha de un partido
+        //Put api/Matches/{id}/date
+        //Mejora del método updateDate para validar que la fecha no sea en el pasado y devolver un mensaje más detallado al actualizar la fecha
         [HttpPut("{id}/date")]
         public async Task<IActionResult> UpdateDate(int id, UpdateMatchDateDto dto)
         {
-            var match = await _context.Matches.FindAsync(id);
-            
-            if (match == null)
-                return NotFound("Partido no encontrado");
-            
-            match.MatchDate = dto.UpdateDate;
-            
-            await _context.SaveChangesAsync();
-            
-            return Ok(new
-            {
-                Message = "Fecha del partido actualizada correctamente",
-                MatchId = match.Id,
-                MatchDate = match.MatchDate
-            });
+            var result = await _matchService.UpdateDateAsync(id, dto);
+            return Ok(result);
         }
 
+        //Put api/Matches/{id}/status
+        //Mejora del método updateStatus para validar que el estado sea válido y devolver un mensaje más detallado al actualizar el estado
+        [HttpPut("{id}/status")]
+        public async Task<IActionResult> UpdateStatus(int id, string status)
+        {
+            var result = await _matchService.UpdateStatusAsync(id, status);
+            return Ok(result);
+        }
 
 
         //Put api/Matches/{id}/field

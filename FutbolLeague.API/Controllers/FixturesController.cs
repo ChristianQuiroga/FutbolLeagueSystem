@@ -26,32 +26,23 @@ namespace FutbolLeague.API.Controllers
         [HttpPost("generate-by-category")]
         public async Task<IActionResult> GenerateByCategory(GenerateFixtureByCategoryDto dto)
         {
-            try
-            {
-                _logger.LogInformation(
+            //Eliminamos el try-catch para que los errores se manejen globalmente en el middleware de excepciones
+            //El logging se mantiene para registrar el inicio y fin del proceso, así como cualquier información relevante
+
+            _logger.LogInformation(
                     "Generando fixture para TournamentId={TournamentId}, CategoryId={CategoryId}",
                     dto.TournamentId,
                     dto.CategoryId);
 
-                var result = await _fixtureService.GenerateByCategoryAsync(dto);
+            var result = await _fixtureService.GenerateByCategoryAsync(dto);
 
-                _logger.LogInformation(
-                    "Fixture generado correctamente para TournamentId={TournamentId}, CategoryId={CategoryId}",
-                    dto.TournamentId,
-                    dto.CategoryId);
+            _logger.LogInformation(
+                "Fixture generado correctamente para TournamentId={TournamentId}, CategoryId={CategoryId}",
+                dto.TournamentId,
+                dto.CategoryId);
 
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "Error al generar fixture para TournamentId={TournamentId}, CategoryId={CategoryId}",
-                    dto.TournamentId,
-                    dto.CategoryId);
+            return Ok(result);
 
-                return BadRequest(ex.Message);
-            }
         }
 
 
@@ -60,32 +51,22 @@ namespace FutbolLeague.API.Controllers
         [HttpPost("assign-dates")]
         public async Task<IActionResult> AssignDates(AssignMatchDatesDto dto)
         {
-            try
-            {
-                _logger.LogInformation(
-                    "Asignando fechas para TournamentId={TournamentId}, CategoryId={CategoryId}",
-                    dto.TournamentId,
-                    dto.CategoryId);
+            //Eliminamos el try-catch para que los errores se manejen globalmente en el middleware de excepciones
+            //El logging se mantiene para registrar el inicio y fin del proceso, así como cualquier información relevante
 
-                var result = await _fixtureService.AssignDatesAsync(dto);
+            _logger.LogInformation(
+                "Asignando fechas para TournamentId={TournamentId}, CategoryId={CategoryId}",
+                dto.TournamentId,
+                dto.CategoryId);
 
-                _logger.LogInformation(
-                    "Fechas asignadas correctamente para TournamentId={TournamentId}, CategoryId={CategoryId}",
-                    dto.TournamentId,
-                    dto.CategoryId);
+            var result = await _fixtureService.AssignDatesAsync(dto);
 
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "Error al asignar fechas para TournamentId={TournamentId}, CategoryId={CategoryId}",
-                    dto.TournamentId,
-                    dto.CategoryId);
+            _logger.LogInformation(
+                "Fechas asignadas correctamente para TournamentId={TournamentId}, CategoryId={CategoryId}",
+                dto.TournamentId,
+                dto.CategoryId);
 
-                return BadRequest(ex.Message);
-            }
+            return Ok(result);
         }
 
 
@@ -94,32 +75,22 @@ namespace FutbolLeague.API.Controllers
         [HttpDelete("tournament/{tournamentId}/category/{categoryId}")]
         public async Task<IActionResult> DeleteFixtureByCategory(int tournamentId, int categoryId)
         {
-            try
-            {
-                _logger.LogInformation(
-                    "Eliminando fixture para TournamentId={TournamentId}, CategoryId={CategoryId}",
-                    tournamentId,
-                    categoryId);
+            //Eliminamos el try-catch para que los errores se manejen globalmente en el middleware de excepciones
+            //El logging se mantiene para registrar el inicio y fin del proceso, así como cualquier información relevante
 
-                var result = await _fixtureService.DeleteFixtureByCategoryAsync(tournamentId, categoryId);
+            _logger.LogInformation(
+                "Eliminando fixture para TournamentId={TournamentId}, CategoryId={CategoryId}",
+                tournamentId,
+                categoryId);
 
-                _logger.LogInformation(
-                    "Fixture eliminado correctamente para TournamentId={TournamentId}, CategoryId={CategoryId}",
-                    tournamentId,
-                    categoryId);
+            var result = await _fixtureService.DeleteFixtureByCategoryAsync(tournamentId, categoryId);
 
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "Error al eliminar fixture para TournamentId={TournamentId}, CategoryId={CategoryId}",
-                    tournamentId,
-                    categoryId);
+            _logger.LogInformation(
+                "Fixture eliminado correctamente para TournamentId={TournamentId}, CategoryId={CategoryId}",
+                tournamentId,
+                categoryId);
 
-                return BadRequest(ex.Message);
-            }
+            return Ok(result);
         }
 
 
@@ -128,32 +99,22 @@ namespace FutbolLeague.API.Controllers
         [HttpPost("assign-fields")]
         public async Task<IActionResult> AssignFields(int tournamentId, int categoryId)
         {
-            try
-            {
-                _logger.LogInformation(
+            //Eliminamos el try-catch para que los errores se manejen globalmente en el middleware de excepciones
+            //El logging se mantiene para registrar el inicio y fin del proceso, así como cualquier información relevante
+
+            _logger.LogInformation(
                     "Asignando canchas para TournamentId={TournamentId}, CategoryId={CategoryId}",
                     tournamentId,
                     categoryId);
 
-                var result = await _fixtureService.AssignFieldsAsync(tournamentId, categoryId);
+            var result = await _fixtureService.AssignFieldsAsync(tournamentId, categoryId);
 
-                _logger.LogInformation(
-                    "Canchas asignadas correctamente para TournamentId={TournamentId}, CategoryId={CategoryId}",
-                    tournamentId,
-                    categoryId);
+            _logger.LogInformation(
+                "Canchas asignadas correctamente para TournamentId={TournamentId}, CategoryId={CategoryId}",
+                tournamentId,
+                categoryId);
 
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "Error al asignar canchas para TournamentId={TournamentId}, CategoryId={CategoryId}",
-                    tournamentId,
-                    categoryId);
-
-                return BadRequest(ex.Message);
-            }
+            return Ok(result);
         }
     }
 }

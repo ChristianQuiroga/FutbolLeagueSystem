@@ -1,4 +1,5 @@
 ﻿using FutbolLeague.Application.DTOs;
+using FutbolLeague.Application.Exceptions;
 using FutbolLeague.Domain;
 using FutbolLeague.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -20,13 +21,14 @@ namespace FutbolLeague.Application.Services
                 .FirstOrDefaultAsync(t => t.Id == dto.TournamentId);
 
             if (tournament == null)
-                throw new Exception("El torneo no existe");
+                //throw new Exception("El torneo no existe"); 
+                throw new NotFoundException("El torneo no existe"); // Cambié el mensaje para que sea más específico sobre qué entidad no se encontró
 
             var categoryExists = await _context.Categories
                 .AnyAsync(c => c.Id == dto.CategoryId);
 
             if (!categoryExists)
-                throw new Exception("La categoría no existe");
+                throw new NotFoundException("La categoría no existe"); // Cambié el mensaje para que sea más específico sobre qué entidad no se encontró
 
             var teams = await _context.Teams
                 .Where(t => t.TournamentId == dto.TournamentId && t.CategoryId == dto.CategoryId)
@@ -34,7 +36,8 @@ namespace FutbolLeague.Application.Services
                 .ToListAsync();
 
             if (teams.Count < 2)
-                throw new Exception("La categoría necesita al menos 2 equipos para generar fixture");
+                //throw new Exception("La categoría necesita al menos 2 equipos para generar fixture");
+                throw new BusinessException("La categoría necesita al menos 2 equipos para generar fixture"); // Cambié el mensaje para que sea más específico sobre la razón de la imposibilidad de generar el fixture y usé BusinessException para indicar que es una regla de negocio
 
             var teamIds = teams.Select(t => t.Id).ToList();
 
@@ -45,10 +48,10 @@ namespace FutbolLeague.Application.Services
                 .ToListAsync();
 
             if (existingMatches.Any(m => m.Status == MatchStatus.Played))
-                throw new Exception("No se puede regenerar el fixture porque ya hay partidos jugados en esta categoría");
+                throw new ConflictException("No se puede regenerar el fixture porque ya hay partidos jugados en esta categoría");// Cambié el mensaje para que sea más específico sobre la imposibilidad de regenerar el fixture debido a partidos ya jugados y usé ConflictException para indicar que es un conflicto con el estado actual de los datos
 
             if (existingMatches.Any())
-                throw new Exception("Esa categoría ya tiene fixture generado en este torneo");
+                throw new ConflictException("Esa categoría ya tiene fixture generado en este torneo"); // Cambié el mensaje para que sea más específico sobre la existencia de un fixture previo y usé ConflictException para indicar que es un conflicto con el estado actual de los datos
 
             var matches = new List<Match>();
             var teamList = teams.Cast<Team?>().ToList();
@@ -123,7 +126,9 @@ namespace FutbolLeague.Application.Services
                 .ToListAsync();
 
             if (!matches.Any())
-                throw new Exception("No hay partidos para ese torneo y categoría");
+                //throw new Exception("No hay partidos para ese torneo y categoría");
+                throw new NotFoundException("No hay partidos para ese torneo y categoría");
+
 
             var rounds = matches
                 .GroupBy(m => m.Round)
@@ -175,7 +180,8 @@ namespace FutbolLeague.Application.Services
                 .ToListAsync();
 
             if (!teams.Any())
-                throw new Exception("No hay equipos para ese torneo y categoría");
+                //throw new Exception("No hay equipos para ese torneo y categoría");
+                throw new NotFoundException("No hay equipos para ese torneo y categoría");
 
             var teamIds = teams.Select(t => t.Id).ToList();
 
@@ -188,12 +194,16 @@ namespace FutbolLeague.Application.Services
                 .ToListAsync();
 
             if (!matches.Any())
-                throw new Exception("No hay partidos para asignar canchas");
+                //throw new Exception("No hay partidos para asignar canchas");
+                throw new NotFoundException("No hay partidos para asignar canchas");
+
 
             var fields = await _context.Fields.ToListAsync();
 
             if (!fields.Any())
-                throw new Exception("No hay canchas registradas");
+                //throw new Exception("No hay canchas registradas");
+                throw new NotFoundException("No hay canchas registradas");
+
 
             int fieldIndex = 0;
 
@@ -224,7 +234,9 @@ namespace FutbolLeague.Application.Services
                 .ToListAsync();
 
             if (!teams.Any())
-                throw new Exception("No hay equipos para ese torneo y categoría");
+                //throw new Exception("No hay equipos para ese torneo y categoría");
+                throw new NotFoundException("No hay equipos para ese torneo y categoría");
+
 
             var teamIds = teams.Select(t => t.Id).ToList();
 
@@ -235,10 +247,14 @@ namespace FutbolLeague.Application.Services
                 .ToListAsync();
 
             if (!matches.Any())
-                throw new Exception("No hay fixture generado para ese torneo y categoría");
+                //throw new Exception("No hay fixture generado para ese torneo y categoría");
+                throw new NotFoundException("No hay fixture generado para ese torneo y categoría");
+
 
             if (matches.Any(m => m.Status == MatchStatus.Played))
-                throw new Exception("No se puede eliminar el fixture porque ya hay partidos jugados en esta categoría");
+                //throw new Exception("No se puede eliminar el fixture porque ya hay partidos jugados en esta categoría");
+                throw new ConflictException("No se puede eliminar el fixture porque ya hay partidos jugados en esta categoría");
+
 
             _context.Matches.RemoveRange(matches);
             await _context.SaveChangesAsync();

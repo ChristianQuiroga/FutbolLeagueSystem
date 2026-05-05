@@ -13,9 +13,11 @@ var builder = WebApplication.CreateBuilder(args); // Crear el constructor de la 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 
 //builder.Services.AddOpenApi();
+// Agregar los servicios necesarios para la aplicación, incluyendo controladores y servicios personalizados
 builder.Services.AddControllers(); // Agregar los controladores a la inyección de dependencias
 builder.Services.AddScoped<IStandingService, StandingService>(); // Agregar el servicio de StandingService a la inyección de dependencias
 builder.Services.AddScoped<IFixtureService, FixtureService>(); // Agregar el servicio de FixtureService a la inyección de dependencias
+builder.Services.AddScoped<IMatchService, MatchService>(); // Agregar el servicio de MatchService a la inyección de dependencias
 
 
 
