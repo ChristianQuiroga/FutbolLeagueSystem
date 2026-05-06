@@ -49,8 +49,7 @@ namespace FutbolLeague.Application.Services
             if (match == null)
                 throw new NotFoundException("Partido no encontrado");
 
-            //match.MatchDate = dto.MatchDate;
-            match.MatchDate = dto.UpdateDate;
+            match.MatchDate = dto.MatchDate;
 
             await _context.SaveChangesAsync();
 
