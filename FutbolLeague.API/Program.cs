@@ -18,6 +18,8 @@ builder.Services.AddControllers(); // Agregar los controladores a la inyección 
 builder.Services.AddScoped<IStandingService, StandingService>(); // Agregar el servicio de StandingService a la inyección de dependencias
 builder.Services.AddScoped<IFixtureService, FixtureService>(); // Agregar el servicio de FixtureService a la inyección de dependencias
 builder.Services.AddScoped<IMatchService, MatchService>(); // Agregar el servicio de MatchService a la inyección de dependencias
+builder.Services.AddScoped<ITournamentService, TournamentService>(); // Agregar el servicio de TournamentService a la inyección de dependencias
+
 
 
 
