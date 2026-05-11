@@ -3,6 +3,7 @@ using FutbolLeague.Application.Exceptions;
 using FutbolLeague.Application.Services;
 using FutbolLeague.Domain;
 using FutbolLeague.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -61,6 +62,7 @@ namespace FutbolLeague.API.Controllers
 
         // Post: api/Matches
         //Mejora del método Create para validar que los equipos no sean iguales y que existan en la base de datos
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Create(CreateMatchDto dto)
         {
@@ -279,6 +281,7 @@ namespace FutbolLeague.API.Controllers
         //    });
         //}
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}/result")]
         public async Task<IActionResult> UpdateResult(int id, UpdateMatchResultDto dto)
         {
@@ -291,6 +294,7 @@ namespace FutbolLeague.API.Controllers
 
         //Put api/Matches/{id}/date
         //Mejora del método updateDate para validar que la fecha no sea en el pasado y devolver un mensaje más detallado al actualizar la fecha
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}/date")]
         public async Task<IActionResult> UpdateDate(int id, UpdateMatchDateDto dto)
         {
@@ -300,6 +304,7 @@ namespace FutbolLeague.API.Controllers
 
         //Put api/Matches/{id}/status
         //Mejora del método updateStatus para validar que el estado sea válido y devolver un mensaje más detallado al actualizar el estado
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateStatus(int id, string status)
         {
@@ -310,6 +315,7 @@ namespace FutbolLeague.API.Controllers
 
         //Put api/Matches/{id}/field
         //Put endpoint para asignar una cancha a un partido, validando que no haya conflictos de horarios con otros partidos en la misma cancha
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}/field")]
         public async Task<IActionResult> AssignField(int id, AssignFieldDto dto)
         {

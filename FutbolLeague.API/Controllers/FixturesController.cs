@@ -1,5 +1,6 @@
 ﻿using FutbolLeague.Application.DTOs;
 using FutbolLeague.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 //Ctrol + M + O para organizar los using
 //ctrol + M + L para colapsar todo el código
@@ -15,6 +16,7 @@ namespace FutbolLeague.API.Controllers
         private readonly IFixtureService _fixtureService;
         private readonly ILogger<FixturesController> _logger; // Inyección de logger
 
+        //DI para el servicio de fixtures y el logger
         public FixturesController(IFixtureService fixtureService, ILogger<FixturesController> logger)
         {
             _fixtureService = fixtureService;
@@ -23,6 +25,7 @@ namespace FutbolLeague.API.Controllers
 
         // POST: api/fixtures/generate-by-category
         // Body: { "tournamentId": 1, "categoryId": 2 }
+        [Authorize(Roles = "Admin")]
         [HttpPost("generate-by-category")]
         public async Task<IActionResult> GenerateByCategory(GenerateFixtureByCategoryDto dto)
         {
@@ -48,6 +51,7 @@ namespace FutbolLeague.API.Controllers
 
         // POST: api/fixtures/assign-dates
         // Body: { "tournamentId": 1, "categoryId": 2, "startDate": "2024-07-01T10:00:00", "endDate": "2024-07-31T18:00:00" }
+        [Authorize(Roles = "Admin")]
         [HttpPost("assign-dates")]
         public async Task<IActionResult> AssignDates(AssignMatchDatesDto dto)
         {
@@ -72,6 +76,7 @@ namespace FutbolLeague.API.Controllers
 
         // DELETE: api/fixtures/tournament/1/category/2
         // Elimina el fixture completo para un torneo y categoría específicos
+        [Authorize(Roles = "Admin")]
         [HttpDelete("tournament/{tournamentId}/category/{categoryId}")]
         public async Task<IActionResult> DeleteFixtureByCategory(int tournamentId, int categoryId)
         {
@@ -96,6 +101,7 @@ namespace FutbolLeague.API.Controllers
 
         // POST: api/fixtures/assign-fields
         // Body: { "tournamentId": 1, "categoryId": 2 }
+        [Authorize(Roles = "Admin")]
         [HttpPost("assign-fields")]
         public async Task<IActionResult> AssignFields(int tournamentId, int categoryId)
         {

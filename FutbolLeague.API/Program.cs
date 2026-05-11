@@ -5,9 +5,45 @@ using Microsoft.EntityFrameworkCore;
 using FutbolLeague.Application.Services; // Agregar el using para los servicios de la aplicación
 using FutbolLeague.API.Middlewares; // Agregar el using para el middleware de manejo de excepciones
 
+using Microsoft.AspNetCore.Authentication.JwtBearer; // Agregar el using para la autenticación JWT
+using Microsoft.IdentityModel.Tokens; // Agregar el using para la validación de tokens
+using System.Text; // Agregar el using para la codificación de texto (para la clave secreta)
+using Microsoft.OpenApi; // Agregar el using para OpenAPI/Swagger
 
 
 var builder = WebApplication.CreateBuilder(args); // Crear el constructor de la aplicación web
+
+/*Configuración de la autenticación JWT
+ */
+var jwtKey = builder.Configuration["Jwt:Key"];
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+var jwtAudience = builder.Configuration["Jwt:Audience"];
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(jwtKey!)
+        )
+    };
+});
+
+builder.Services.AddAuthorization();
+// Fin de la configuración de la autenticación JWT
+
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -20,12 +56,41 @@ builder.Services.AddScoped<IFixtureService, FixtureService>(); // Agregar el ser
 builder.Services.AddScoped<IMatchService, MatchService>(); // Agregar el servicio de MatchService a la inyección de dependencias
 builder.Services.AddScoped<ITournamentService, TournamentService>(); // Agregar el servicio de TournamentService a la inyección de dependencias
 
+builder.Services.AddScoped<IAuthService, AuthService>(); // Agregar el servicio de AuthService a la inyección de dependencias
+
 
 
 
 //Instalamos los paquetes necesarios para Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+//builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new()
+    {
+        Title = "FutbolLeague API",
+        Version = "v1"
+    });
+
+    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = Microsoft.OpenApi.ParameterLocation.Header,
+        Description = "Ingrese solo el token JWT, sin la palabra Bearer."
+    });
+
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecuritySchemeReference("Bearer", document),
+            new List<string>()
+        }
+    });
+});
+
 
 
 
@@ -50,11 +115,14 @@ app.UseSwaggerUI(); // Habilitar la interfaz de usuario de Swagger para explorar
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()) // Solo habilitar Swagger en el entorno de desarrollo para evitar exponer la documentación en producción
 {
-    app.MapOpenApi(); 
+    app.MapOpenApi();
 }
 
 
 app.UseHttpsRedirection(); // Redirigir las solicitudes HTTP a HTTPS para mayor seguridad
+
+app.UseAuthentication(); // Habilitar la autenticación para proteger las rutas de la API
+app.UseAuthorization(); // Habilitar la autorización para controlar el acceso a las rutas de la API
 
 app.MapControllers(); // Mapear los controladores a las rutas de la API
 
@@ -62,29 +130,3 @@ app.Run(); // Ejecutar la aplicación
 
 
 
-
-//var summaries = new[]
-//{
-//    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-//};
-
-//app.MapGet("/weatherforecast", () =>
-//{
-//    var forecast =  Enumerable.Range(1, 5).Select(index =>
-//        new WeatherForecast
-//        (
-//            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-//            Random.Shared.Next(-20, 55),
-//            summaries[Random.Shared.Next(summaries.Length)]
-//        ))
-//        .ToArray();
-//    return forecast;
-//})
-//.WithName("GetWeatherForecast");
-
-//app.Run();
-
-//record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-//{
-//    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-//}

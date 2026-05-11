@@ -1,5 +1,6 @@
 ﻿using FutbolLeague.Application.DTOs;
 using FutbolLeague.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 //Ctrl + M, O para colapsar todo el código y tener una vista general del controlador
@@ -36,6 +37,7 @@ namespace FutbolLeague.API.Controllers
 
         //POST: api/tournaments
         //Crea un nuevo torneo con el nombre y formato de fixture especificados
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Create(CreateTournamentDto dto)
         {

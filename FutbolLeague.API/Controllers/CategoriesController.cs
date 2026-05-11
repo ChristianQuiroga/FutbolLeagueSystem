@@ -1,9 +1,10 @@
 ﻿
+using FutbolLeague.Application.DTOs;
 using FutbolLeague.Domain;
 using FutbolLeague.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using FutbolLeague.Application.DTOs;
 
 //Ctrol + M, O para colapsar todo el código y tener una vista general del controlador
 namespace FutbolLeague.API.Controllers
@@ -20,6 +21,13 @@ namespace FutbolLeague.API.Controllers
             _context = context;
         }
 
+        //TEST
+        [Authorize]
+        [HttpGet("secure-test")]
+        public IActionResult SecureTest()
+        {
+            return Ok("Entraste con token válido");
+        }
 
         // GET: api/Categories
         // Obtiene todas las categorías
