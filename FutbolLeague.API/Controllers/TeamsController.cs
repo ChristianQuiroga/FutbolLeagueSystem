@@ -1,6 +1,7 @@
 ﻿using FutbolLeague.Application.DTOs;
 using FutbolLeague.Domain;
 using FutbolLeague.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -50,6 +51,7 @@ namespace FutbolLeague.API.Controllers
 
         // POST: api/Teams
         // Este método crea un nuevo equipo, validando que el nombre no esté vacío, que la categoría exista, que el nombre no se repita en la misma categoría y que el torneo exista
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Create(CreateTeamDto dto)
         {

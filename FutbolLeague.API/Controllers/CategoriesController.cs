@@ -1,5 +1,6 @@
 ﻿
 using FutbolLeague.Application.DTOs;
+using FutbolLeague.Application.Exceptions;
 using FutbolLeague.Domain;
 using FutbolLeague.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
@@ -48,6 +49,7 @@ namespace FutbolLeague.API.Controllers
 
         // POST: api/Categories
         // Crea una nueva categoría
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Create(CreateCategoryDto dto)
         {
@@ -72,6 +74,31 @@ namespace FutbolLeague.API.Controllers
             {
                 Id = category.Id,
                 Name = category.Name
+            });
+        }
+
+        //Delete: api/Categories/{id}
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var category = await _context.Categories.FindAsync(id);
+
+            if (category == null)
+                throw new NotFoundException("La categoría no existe");
+
+            var hasTeams = await _context.Teams.AnyAsync(t => t.CategoryId == id);
+
+            if (hasTeams)
+                throw new ConflictException("No se puede eliminar la categoría porque tiene equipos asociados");
+
+            _context.Categories.Remove(category);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                Message = "Categoría eliminada correctamente",
+                CategoryId = id
             });
         }
     }
