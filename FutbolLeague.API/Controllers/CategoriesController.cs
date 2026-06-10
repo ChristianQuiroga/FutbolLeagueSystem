@@ -1,6 +1,7 @@
 ﻿
 using FutbolLeague.Application.DTOs;
 using FutbolLeague.Application.Exceptions;
+using FutbolLeague.Application.Services;
 using FutbolLeague.Domain;
 using FutbolLeague.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
@@ -10,16 +11,15 @@ using Microsoft.EntityFrameworkCore;
 //Ctrol + M, O para colapsar todo el código y tener una vista general del controlador
 namespace FutbolLeague.API.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class CategoriesController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly ICategoryService _categoryService;
 
-        // Inyectamos el contexto de la base de datos a través del constructor
-        public CategoriesController(AppDbContext context)
+        public CategoriesController(ICategoryService categoryService)
         {
-            _context = context;
+            _categoryService = categoryService;
         }
 
         //TEST
@@ -35,13 +35,7 @@ namespace FutbolLeague.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var categories = await _context.Categories
-                .Select(c => new CategoryDto
-                {
-                    Id = c.Id,
-                    Name = c.Name
-                })
-                .ToListAsync();
+            var categories = await _categoryService.GetAllAsync();
 
             return Ok(categories);
         }
@@ -53,28 +47,9 @@ namespace FutbolLeague.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(CreateCategoryDto dto)
         {
-            if (string.IsNullOrEmpty(dto.Name))
-                return BadRequest("El nombre de la Category es obligatorio.");
+            var category = await _categoryService.CreateAsync(dto);
 
-            //La categoria no puede estar duplicada con el mismo nombre.
-            if(await _context.Categories
-                .AnyAsync(c => c.Name == dto.Name)) 
-                return BadRequest("Ya existe esa misma Categoría, esta duplicada");
-            
-
-            var category = new Category
-            {
-                Name = dto.Name
-            };
-
-            _context.Categories.Add(category);
-            await _context.SaveChangesAsync();
-
-            return Ok(new CategoryDto
-            {
-                Id = category.Id,
-                Name = category.Name
-            });
+            return Ok(category);
         }
 
         //Delete: api/Categories/{id}
@@ -82,23 +57,11 @@ namespace FutbolLeague.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var category = await _context.Categories.FindAsync(id);
-
-            if (category == null)
-                throw new NotFoundException("La categoría no existe");
-
-            var hasTeams = await _context.Teams.AnyAsync(t => t.CategoryId == id);
-
-            if (hasTeams)
-                throw new ConflictException("No se puede eliminar la categoría porque tiene equipos asociados");
-
-            _context.Categories.Remove(category);
-            await _context.SaveChangesAsync();
+            await _categoryService.DeleteAsync(id);
 
             return Ok(new
             {
-                Message = "Categoría eliminada correctamente",
-                CategoryId = id
+                Message = "Categoría desactivada correctamente"
             });
         }
     }

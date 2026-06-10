@@ -10,6 +10,8 @@ using Microsoft.IdentityModel.Tokens; // Agregar el using para la validación de
 using System.Text; // Agregar el using para la codificación de texto (para la clave secreta)
 using Microsoft.OpenApi; // Agregar el using para OpenAPI/Swagger
 
+using FutbolLeague.Infrastructure.Seeds; // Agregar el using para las semillas de la base de datos
+
 
 var builder = WebApplication.CreateBuilder(args); // Crear el constructor de la aplicación web
 
@@ -55,6 +57,7 @@ builder.Services.AddScoped<IMatchService, MatchService>(); // Agregar el servici
 builder.Services.AddScoped<ITournamentService, TournamentService>(); // Agregar el servicio de TournamentService a la inyección de dependencias
 
 builder.Services.AddScoped<IAuthService, AuthService>(); // Agregar el servicio de AuthService a la inyección de dependencias
+builder.Services.AddScoped<ICategoryService, CategoryService>(); // Agregar el servicio de CategoryService a la inyección de dependencias
 
 
 
@@ -123,6 +126,16 @@ app.UseAuthentication(); // Habilitar la autenticación para proteger las rutas 
 app.UseAuthorization(); // Habilitar la autorización para controlar el acceso a las rutas de la API
 
 app.MapControllers(); // Mapear los controladores a las rutas de la API
+
+
+// Sembrar el usuario admin en la base de datos al iniciar la aplicación
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider
+        .GetRequiredService<AppDbContext>();
+
+    await DBSeeds.SeedAdminAsync(context);
+}
 
 app.Run(); // Ejecutar la aplicación
 
