@@ -3,12 +3,19 @@ using FutbolLeague.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-//Ctrl + M, O para colapsar todo el código y tener una vista general del controlador
-//Ctrl + M, L para expandir todo el código y ver los detalles del controlador
-//Ctrl + M, P para expandir el bloque de código actual y ver los detalles del método o sección en la que estamos trabajando
-//Ctrl + K, C para comentar un bloque de código
-//Ctrl + K, U para descomentar un bloque de código
-//Embellecer el codigo con Ctrl + K, D
+/*
+ * =================================
+ * Ayuda de Visual Studio para trabajar con el código
+ * =================================
+ * 
+    Ctrl + M, O para colapsar todo el código y tener una vista general del controlador
+    Ctrl + M, L para expandir todo el código y ver los detalles del controlador
+    Ctrl + M, P para expandir el bloque de código actual y ver los detalles del método o sección en la que estamos trabajando
+    Ctrl + K, C para comentar un bloque de código
+    Ctrl + K, U para descomentar un bloque de código
+    Embellecer el codigo con Ctrl + K, D 
+*/
+
 namespace FutbolLeague.API.Controllers
 {
     [ApiController]
@@ -64,6 +71,28 @@ namespace FutbolLeague.API.Controllers
             var summary = await _tournamentService.GetSummaryAsync(tournamentId, categoryId);
 
             return Ok(summary);
+        }
+
+        //Put: api/tournaments/{id}/start
+        //Inicia el torneo, cambiando su estado a "En curso" y generando los partidos correspondientes al formato de fixture seleccionado
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}/start")]
+        public async Task<IActionResult> Start(int id)
+        {
+            var result = await _tournamentService.StartAsync(id);
+
+            return Ok(result);
+        }
+
+        //Put: api/tournaments/{id}/finish
+        //Finaliza el torneo, cambiando su estado a "Finalizado" y actualizando los resultados de los partidos restantes como perdidos para los equipos que no hayan jugado todos sus partidos
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}/finish")]
+        public async Task<IActionResult> Finish(int id)
+        {
+            var result = await _tournamentService.FinishAsync(id);
+
+            return Ok(result);
         }
     }
 }

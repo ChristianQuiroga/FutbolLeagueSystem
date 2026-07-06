@@ -58,7 +58,7 @@ builder.Services.AddScoped<ITournamentService, TournamentService>(); // Agregar 
 
 builder.Services.AddScoped<IAuthService, AuthService>(); // Agregar el servicio de AuthService a la inyección de dependencias
 builder.Services.AddScoped<ICategoryService, CategoryService>(); // Agregar el servicio de CategoryService a la inyección de dependencias
-
+builder.Services.AddScoped<IUserService, UserService>(); // Agregar el servicio de UserService a la inyección de dependencias
 
 
 
