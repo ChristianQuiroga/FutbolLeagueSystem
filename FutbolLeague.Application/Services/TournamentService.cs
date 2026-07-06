@@ -30,7 +30,9 @@ namespace FutbolLeague.Application.Services
                     Id = t.Id,
                     Name = t.Name,
                     FixtureFormat = (int)t.FixtureFormat,
-                    FixtureFormatName = t.FixtureFormat.ToString() // Asumiendo que FixtureFormat es un enum
+                    FixtureFormatName = t.FixtureFormat.ToString(), // Asumiendo que FixtureFormat es un enum
+                    Status = (int)t.Status,
+                    StatusName = t.Status.ToString()
                 })
                 .ToListAsync();
         }
@@ -63,7 +65,9 @@ namespace FutbolLeague.Application.Services
                 Id = tournament.Id,
                 Name = tournament.Name,
                 FixtureFormat = (int)tournament.FixtureFormat,
-                FixtureFormatName = tournament.FixtureFormat.ToString()
+                FixtureFormatName = tournament.FixtureFormat.ToString(),
+                Status = (int)tournament.Status,
+                StatusName = tournament.Status.ToString()
             }; // Devolvemos un objeto TournamentDto con la información del torneo recién creado, incluyendo su ID generado por la base de datos, el nombre, el formato de fixture y el nombre del formato de fixture.
         }
 
@@ -154,6 +158,59 @@ namespace FutbolLeague.Application.Services
                     TeamsCount = teams.Count
                 }
             };            
+        }
+
+        // Implementación del método para iniciar un torneo, que cambia el estado del torneo a "En curso" y guarda los cambios en la base de datos. También incluye validaciones para asegurarse de que el torneo existe y que no se puede iniciar un torneo que ya está en curso o que ya está finalizado.
+        public async Task<object> StartAsync(int tournamentId)
+        {
+            var tournament = await _context.Tournaments.FindAsync(tournamentId);
+
+            if (tournament == null)
+                throw new NotFoundException("El torneo no existe");
+
+            if (tournament.Status == TournamentStatus.InProgress)
+                throw new ConflictException("El torneo ya está en curso");
+
+            if (tournament.Status == TournamentStatus.Finished)
+                throw new ConflictException("No se puede iniciar un torneo finalizado");
+
+            tournament.Status = TournamentStatus.InProgress;
+
+            await _context.SaveChangesAsync();
+
+            return new
+            {
+                Message = "Torneo iniciado correctamente",
+                TournamentId = tournament.Id,
+                Status = tournament.Status.ToString()
+            };
+        }
+
+
+        // Implementación del método para finalizar un torneo, que cambia el estado del torneo a "Finalizado" y guarda los cambios en la base de datos. También incluye validaciones para asegurarse de que el torneo existe y que no se puede finalizar un torneo que aún no ha iniciado o que ya está finalizado.
+        public async Task<object> FinishAsync(int tournamentId)
+        {
+            var tournament = await _context.Tournaments.FindAsync(tournamentId);
+
+            if (tournament == null)
+                throw new NotFoundException("El torneo no existe");
+
+            if (tournament.Status == TournamentStatus.Pending)
+                throw new ConflictException("No se puede finalizar un torneo que todavía no inició");
+
+            if (tournament.Status == TournamentStatus.Finished)
+                throw new ConflictException("El torneo ya está finalizado");
+
+            tournament.Status = TournamentStatus.Finished;
+
+            await _context.SaveChangesAsync();
+
+            return new
+            {
+                Message = "Torneo finalizado correctamente",
+                TournamentId = tournament.Id,
+                Status = tournament.Status.ToString()
+            };
         }
 
     }

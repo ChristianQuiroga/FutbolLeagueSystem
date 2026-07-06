@@ -2,7 +2,7 @@
 
 namespace FutbolLeague.Application.Services
 {
-    /*
+    /* 
     Pasar de esto:
     TournamentsController con lógica
     a esto:
@@ -13,12 +13,15 @@ namespace FutbolLeague.Application.Services
     crear torneo
     listar torneos
     resumen del torneo por categoría
+    Iniciar torneo  
+    Finalizar el torneo.
     */
-
     public interface ITournamentService
     {
         Task<List<TournamentDto>> GetAllAsync(); // Listar torneos
         Task<TournamentDto> CreateAsync(CreateTournamentDto dto); // Crear torneo
         Task<object> GetSummaryAsync(int tournamentId, int categoryId); // Resumen del torneo por categoría (puede ser un DTO específico en lugar de object)
+        Task<object> StartAsync(int tournamentId); 
+        Task<object> FinishAsync(int tournamentId); 
     }
 }
