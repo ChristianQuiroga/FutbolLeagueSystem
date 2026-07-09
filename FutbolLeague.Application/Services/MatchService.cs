@@ -22,6 +22,7 @@ namespace FutbolLeague.Application.Services
 
             if (match == null)
                 throw new NotFoundException("Partido no encontrado"); // Si no se encuentra el partido, lanza una excepción
+            await ValidateTournamentIsNotFinishedAsync(match.TournamentId); // Valida que el torneo no esté finalizado antes de permitir la actualización del resultado
 
             if (dto.HomeScore < 0 || dto.AwayScore < 0) 
                 throw new BusinessException("Los goles no pueden ser negativos"); // Validación para asegurar que los goles no sean negativos
@@ -49,6 +50,8 @@ namespace FutbolLeague.Application.Services
             if (match == null)
                 throw new NotFoundException("Partido no encontrado");
 
+            await ValidateTournamentIsNotFinishedAsync(match.TournamentId); // Valida que el torneo no esté finalizado antes de permitir la actualización de la fecha
+
             match.MatchDate = dto.MatchDate;
 
             await _context.SaveChangesAsync();
@@ -68,6 +71,8 @@ namespace FutbolLeague.Application.Services
             if (match == null)
                 throw new NotFoundException("Partido no encontrado");
 
+            await ValidateTournamentIsNotFinishedAsync(match.TournamentId); // Valida que el torneo no esté finalizado antes de permitir la actualización del estado
+
             if (!Enum.TryParse<MatchStatus>(status, true, out var parsedStatus))
                 throw new BusinessException("Estado inválido");
 
@@ -81,6 +86,18 @@ namespace FutbolLeague.Application.Services
                 MatchId = match.Id,
                 Status = match.Status.ToString()
             };
+        }
+
+        // Método privado para validar que el torneo no esté finalizado antes de permitir modificaciones en los partidos
+        private async Task ValidateTournamentIsNotFinishedAsync(int tournamentId)
+        {
+            var tournament = await _context.Tournaments.FindAsync(tournamentId);
+
+            if (tournament == null)
+                throw new NotFoundException("El torneo no existe");
+
+            if (tournament.Status == TournamentStatus.Finished)
+                throw new ConflictException("No se pueden modificar partidos de un torneo finalizado");
         }
     }
 }

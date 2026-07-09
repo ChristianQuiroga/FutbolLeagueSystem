@@ -38,21 +38,42 @@ namespace FutbolLeague.API.Controllers
         public async Task<IActionResult> GetAll()
         {
             var matches = await _context.Matches
+                .Include(m => m.Tournament)
                 .Include(m => m.HomeTeam)
+                    .ThenInclude(t => t.Category)
                 .Include(m => m.AwayTeam)
-                .OrderBy(m => m.Round)
-                .ThenBy(m => m.Id)
+                .Include(m => m.Field)
+                .OrderBy(m => m.TournamentId)
+                .ThenBy(m => m.Round)
+                .ThenBy(m => m.MatchDate)
                 .Select(m => new MatchDto
                 {
                     Id = m.Id,
+
+                    TournamentId = m.TournamentId,
+                    TournamentName = m.Tournament!.Name,
+                    TournamentStatus = m.Tournament.Status.ToString(),
+
+                    CategoryId = m.HomeTeam!.CategoryId,
+                    CategoryName = m.HomeTeam.Category!.Name,
+
                     Round = m.Round,
+
+                    HomeTeamId = m.HomeTeamId,
                     HomeTeam = m.HomeTeam.Name,
-                    AwayTeam = m.AwayTeam.Name,
+
+                    AwayTeamId = m.AwayTeamId,
+                    AwayTeam = m.AwayTeam!.Name,
+
                     HomeScore = m.HomeScore,
                     AwayScore = m.AwayScore,
-                    Status = m.Status.ToString(), //Devolvemos el estado como string para mayor claridad
-                    MatchDate = m.MatchDate, //Incluimos la fecha del partido en el DTO
-                    Field = m.Field != null ? m.Field.Name : null //Incluimos el nombre del campo si existe
+
+                    Status = m.Status.ToString(),
+
+                    MatchDate = m.MatchDate,
+
+                    FieldId = m.FieldId,
+                    Field = m.Field != null ? m.Field.Name : null
                 })
                 .ToListAsync();
 
