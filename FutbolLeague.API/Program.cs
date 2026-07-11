@@ -11,6 +11,7 @@ using System.Text; // Agregar el using para la codificación de texto (para la c
 using Microsoft.OpenApi; // Agregar el using para OpenAPI/Swagger
 
 using FutbolLeague.Infrastructure.Seeds; // Agregar el using para las semillas de la base de datos
+using FutbolLeague.API.Swagger;
 
 
 var builder = WebApplication.CreateBuilder(args); // Crear el constructor de la aplicación web
@@ -83,13 +84,15 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Ingrese solo el token JWT, sin la palabra Bearer."
     });
 
-    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecuritySchemeReference("Bearer", document),
-            new List<string>()
-        }
-    });
+    options.OperationFilter<AuthorizeOperationFilter>();
+
+    //options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    //{
+    //    {
+    //        new OpenApiSecuritySchemeReference("Bearer", document),
+    //        new List<string>()
+    //    }
+    //});
 });
 
 
