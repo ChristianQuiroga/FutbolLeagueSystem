@@ -17,12 +17,14 @@ namespace FutbolLeague.Application.Services
 
         public async Task<object> GenerateByCategoryAsync(GenerateFixtureByCategoryDto dto)
         {
-            var tournament = await _context.Tournaments
-                .FirstOrDefaultAsync(t => t.Id == dto.TournamentId);
+            //var tournament = await _context.Tournaments
+            //    .FirstOrDefaultAsync(t => t.Id == dto.TournamentId);
 
-            if (tournament == null)
-                //throw new Exception("El torneo no existe"); 
-                throw new NotFoundException("El torneo no existe"); // Cambié el mensaje para que sea más específico sobre qué entidad no se encontró
+            //if (tournament == null)
+            //    //throw new Exception("El torneo no existe"); 
+            //    throw new NotFoundException("El torneo no existe"); // Cambié el mensaje para que sea más específico sobre qué entidad no se encontró
+
+            var tournament = await ValidateTournamentCanModifyFixtureAsync(dto.TournamentId);
 
             var categoryExists = await _context.Categories
                 .AnyAsync(c => c.Id == dto.CategoryId);
@@ -117,6 +119,8 @@ namespace FutbolLeague.Application.Services
 
         public async Task<object> AssignDatesAsync(AssignMatchDatesDto dto)
         {
+            await ValidateTournamentCanModifyFixtureAsync(dto.TournamentId);
+
             var matches = await _context.Matches
                 .Include(m => m.HomeTeam)
                 .Where(m => m.TournamentId == dto.TournamentId &&
@@ -175,6 +179,8 @@ namespace FutbolLeague.Application.Services
 
         public async Task<object> AssignFieldsAsync(int tournamentId, int categoryId)
         {
+            await ValidateTournamentCanModifyFixtureAsync(tournamentId);
+
             var teams = await _context.Teams
                 .Where(t => t.TournamentId == tournamentId && t.CategoryId == categoryId)
                 .ToListAsync();
@@ -229,6 +235,7 @@ namespace FutbolLeague.Application.Services
 
         public async Task<object> DeleteFixtureByCategoryAsync(int tournamentId, int categoryId)
         {
+            await ValidateTournamentCanModifyFixtureAsync(tournamentId);
             var teams = await _context.Teams
                 .Where(t => t.TournamentId == tournamentId && t.CategoryId == categoryId)
                 .ToListAsync();
@@ -266,6 +273,18 @@ namespace FutbolLeague.Application.Services
                 CategoryId = categoryId,
                 MatchesDeleted = matches.Count
             };
+        }
+        private async Task<Tournament> ValidateTournamentCanModifyFixtureAsync(int tournamentId)
+        {
+            var tournament = await _context.Tournaments.FindAsync(tournamentId);
+
+            if (tournament == null)
+                throw new NotFoundException("El torneo no existe");
+
+            if (tournament.Status == TournamentStatus.Finished)
+                throw new ConflictException("No se puede modificar el fixture de un torneo finalizado");
+
+            return tournament;
         }
     }
 }
