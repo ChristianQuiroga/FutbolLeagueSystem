@@ -88,6 +88,33 @@ namespace FutbolLeague.Application.Services
             };
         }
 
+        public async Task<object> UpdateFieldAsync(int matchId, int fieldId)
+        {
+            var match = await _context.Matches.FindAsync(matchId);
+
+            if (match == null)
+                throw new NotFoundException("Partido no encontrado");
+
+            await ValidateTournamentIsNotFinishedAsync(match.TournamentId);
+
+            var field = await _context.Fields.FindAsync(fieldId);
+
+            if (field == null)
+                throw new NotFoundException("Cancha no encontrada");
+
+            match.FieldId = field.Id;
+
+            await _context.SaveChangesAsync();
+
+            return new
+            {
+                Message = "Cancha actualizada correctamente",
+                MatchId = match.Id,
+                FieldId = field.Id,
+                FieldName = field.Name
+            };
+        }
+
         // Método privado para validar que el torneo no esté finalizado antes de permitir modificaciones en los partidos
         private async Task ValidateTournamentIsNotFinishedAsync(int tournamentId)
         {

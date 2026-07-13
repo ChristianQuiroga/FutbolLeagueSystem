@@ -31,7 +31,16 @@ namespace FutbolLeague.API.Controllers
         }
 
         // GET: api/Categories
-        // Obtiene todas las categorías
+        /// <summary>
+        /// Obtiene todas las categorías activas.
+        /// </summary>
+        /// <remarks>
+        /// Devuelve únicamente las categorías disponibles para su uso.
+        /// Las categorías desactivadas mediante borrado lógico no se incluyen.
+        ///
+        /// Este endpoint es público y no requiere autenticación.
+        /// </remarks>
+        /// <returns>Lista de categorías activas.</returns>
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -42,7 +51,16 @@ namespace FutbolLeague.API.Controllers
 
 
         // POST: api/Categories
-        // Crea una nueva categoría
+        /// <summary>
+        /// Crea una nueva categoría.
+        /// </summary>
+        /// <remarks>
+        /// Registra una nueva categoría en el sistema.
+        ///
+        /// Requiere autenticación mediante JWT y rol Admin.
+        /// </remarks>
+        /// <param name="dto">Datos necesarios para crear la categoría.</param>
+        /// <returns>La categoría creada.</returns>
         [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Create(CreateCategoryDto dto)
@@ -53,6 +71,18 @@ namespace FutbolLeague.API.Controllers
         }
 
         //Delete: api/Categories/{id}
+        /// <summary>
+        /// Desactiva una categoría.
+        /// </summary>
+        /// <remarks>
+        /// Realiza un borrado lógico. La categoría permanece almacenada en la
+        /// base de datos, pero su propiedad IsActive cambia a false y deja de
+        /// aparecer en las consultas de categorías activas.
+        ///
+        /// Requiere autenticación mediante JWT y rol Admin.
+        /// </remarks>
+        /// <param name="id">Identificador de la categoría.</param>
+        /// <returns>Confirmación de la desactivación.</returns>
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)

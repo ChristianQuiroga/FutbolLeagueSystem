@@ -31,9 +31,18 @@ namespace FutbolLeague.API.Controllers
         }
 
 
-        // GET: api/Matches/{id}
         //GET: api/Matches
-        //Mejora del método GetAll para incluir el nombre de los equipos y ordenar por ronda
+        /// <summary>
+        /// Obtiene todos los partidos de la base de datos, incluyendo información del torneo, categoría, equipos y campo. Los resultados se ordenan por torneo, ronda y fecha del partido.
+        /// </summary>
+        /// <remarks>
+        /// Devuelve los partidos con información del torneo, estado del torneo,
+        /// categoría, equipos local y visitante, resultado, estado del partido,
+        /// fecha y cancha asignada.
+        ///
+        /// Este endpoint es público y no requiere autenticación.
+        /// </remarks>
+        /// <returns>Lista completa de partidos.</returns>
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -82,7 +91,22 @@ namespace FutbolLeague.API.Controllers
 
 
         // Post: api/Matches
-        //Mejora del método Create para validar que los equipos no sean iguales y que existan en la base de datos
+        /// <summary>
+        /// Crear un partido manualmente. Se valida que los equipos no sean iguales y que existan en la base de datos. Solo los usuarios con rol "Admin" pueden crear partidos.
+        /// </summary>
+        /// /// <remarks>
+        /// Registra un nuevo partido entre un equipo local y un equipo visitante.
+        ///
+        /// Este endpoint permite crear un partido individual. Para generar
+        /// automáticamente todos los partidos de una categoría se recomienda
+        /// utilizar el endpoint correspondiente de Fixtures.
+        ///
+        /// Requiere autenticación mediante JWT y rol Admin.
+        /// </remarks>
+        /// <param name="dto">Datos necesarios para crear el partido.</param>
+        /// <returns>El partido creado.</returns>
+        /// <exception cref="BusinessException"></exception>
+        /// <exception cref="NotFoundException"></exception>
         [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Create(CreateMatchDto dto)
@@ -113,7 +137,18 @@ namespace FutbolLeague.API.Controllers
 
 
         //Get api/Matches/tournament/{tournamentId}/round/{round}
-        //Mejora del método GetByRound para incluir el nombre de los equipos y devolver un objeto con la información del torneo, ronda y partidos
+        /// <summary>
+        /// Obtiene los partidos de una ronda de un torneo.
+        /// </summary>
+        /// <remarks>
+        /// Devuelve todos los partidos correspondientes al torneo y al número
+        /// de ronda indicados, sin filtrar por categoría.
+        ///
+        /// Este endpoint es público y no requiere autenticación.
+        /// </remarks>
+        /// <param name="tournamentId">Identificador del torneo.</param>
+        /// <param name="round">Número de ronda del fixture.</param>
+        /// <returns>Lista de partidos de la ronda seleccionada.</returns>
         [HttpGet("tournament/{tournamentId}/round/{round}")]
         public async Task<IActionResult> GetByRound(int tournamentId, int round)
         {
@@ -150,7 +185,19 @@ namespace FutbolLeague.API.Controllers
 
 
         //Get api/Matches/tournament/{tournamentId}/category/{categoryId}/round/{round}
-        //Mejora del método GetByTournamentCategoryAndRound para incluir el nombre de los equipos y devolver un objeto con la información del torneo, categoría, ronda y partidos
+        /// <summary>
+        /// Obtiene los partidos de una categoría y ronda determinadas.
+        /// </summary>
+        /// <remarks>
+        /// Devuelve los partidos pertenecientes al torneo, categoría y número
+        /// de ronda especificados.
+        ///
+        /// Este endpoint es público y no requiere autenticación.
+        /// </remarks>
+        /// <param name="tournamentId">Identificador del torneo.</param>
+        /// <param name="categoryId">Identificador de la categoría.</param>
+        /// <param name="round">Número de ronda del fixture.</param>
+        /// <returns>Lista de partidos que coinciden con los filtros.</returns>
         [HttpGet("tournament/{tournamentId}/category/{categoryId}/round/{round}")]
         public async Task<IActionResult> GetByTournamentCategoryAndRound(int tournamentId, int categoryId, int round)
         {
@@ -191,8 +238,18 @@ namespace FutbolLeague.API.Controllers
 
 
         //Get api/Matches/tournament/{tournamentId}/category/{categoryId}
-        //Mejora del método GetByTournamentAndCategory para incluir el nombre de los equipos y devolver un objeto con la información del torneo, categoría y partidos
-        //Mejora utíl, consultar todas las rondas de una categoría.
+        /// <summary>
+        /// Obtiene todos los partidos de una categoría dentro de un torneo.
+        /// </summary>
+        /// <remarks>
+        /// Devuelve el fixture completo correspondiente al torneo y a la
+        /// categoría seleccionados.
+        ///
+        /// Este endpoint es público y no requiere autenticación.
+        /// </remarks>
+        /// <param name="tournamentId">Identificador del torneo.</param>
+        /// <param name="categoryId">Identificador de la categoría.</param>
+        /// <returns>Lista completa de partidos de la categoría.</returns>
         [HttpGet("tournament/{tournamentId}/category/{categoryId}")]
         public async Task<IActionResult> GetByTournamentAndCategory(int tournamentId, int categoryId)
         {
@@ -225,83 +282,23 @@ namespace FutbolLeague.API.Controllers
         }
 
 
-
-
-        //Put api/Matches/{id}/result
-        //Mejora del método updateResult para validar que los goles no sean negativos y devolver un mensaje más detallado al actualizar el resultado
-        //[HttpPut("{id}/result")]
-        //public async Task<IActionResult> UpdateResult(int id, UpdateMatchResultDto dto)
-        //{
-        //    //Mejora del método updateResult
-        //    if (dto.HomeScore < 0 || dto.AwayScore < 0)
-        //        return BadRequest("Los goles no pueden ser negativos");
-        //    //
-
-        //    var match = await _context.Matches.FindAsync(id);
-
-        //    if (match == null)
-        //        return NotFound("Partido no encontrado");
-
-        //    match.HomeScore = dto.HomeScore;
-        //    match.AwayScore = dto.AwayScore;
-        //    match.Status = MatchStatus.Played; //Enun jugado.
-
-        //    await _context.SaveChangesAsync();
-
-        //    return Ok(new
-        //    {
-        //        Message = "Resultado actualizado",
-        //        MatchId = match.Id,
-        //        HomeScore = match.HomeScore,
-        //        AwayScore = match.AwayScore,
-        //        Status = match.Status.ToString() //Devolvemos el estado como string para mayor claridad
-        //    });
-        //}
-
-        //[HttpPut("{id}/result")]
-        //public async Task<IActionResult> UpdateResult(int id, UpdateMatchResultDto dto)
-        //{
-        //    if (dto.HomeScore < 0 || dto.AwayScore < 0)
-        //    {
-        //        _logger.LogWarning(
-        //            "Intento de cargar resultado inválido para MatchId={MatchId}. HomeScore={HomeScore}, AwayScore={AwayScore}",
-        //            id,
-        //            dto.HomeScore,
-        //            dto.AwayScore);
-
-        //        return BadRequest("Los goles no pueden ser negativos");
-        //    }
-
-        //    var match = await _context.Matches.FindAsync(id);
-
-        //    if (match == null)
-        //    {
-        //        _logger.LogWarning("NoXXX se encontró MatchId={MatchId} para actualizar resultado", id);
-        //        return NotFound("Partido no encontrado");
-        //    }
-
-        //    match.HomeScore = dto.HomeScore;
-        //    match.AwayScore = dto.AwayScore;
-        //    match.Status = MatchStatus.Played;
-
-        //    await _context.SaveChangesAsync();
-
-        //    _logger.LogInformation(
-        //        "ResultadoXXX actualizado para MatchId={MatchId}. HomeScore={HomeScore}, AwayScore={AwayScore}",
-        //        match.Id,
-        //        match.HomeScore,
-        //        match.AwayScore);
-
-        //    return Ok(new
-        //    {
-        //        Message = "Resultado actualizado correctamente",
-        //        MatchId = match.Id,
-        //        HomeScore = match.HomeScore,
-        //        AwayScore = match.AwayScore,
-        //        Status = match.Status.ToString()
-        //    });
-        //}
-
+        /// <summary>
+        /// Registra o actualiza el resultado de un partido.
+        /// </summary>
+        /// <remarks>
+        /// Actualiza los goles del equipo local y visitante.
+        ///
+        /// Al cargar el resultado, el estado del partido cambia automáticamente
+        /// a Played.
+        ///
+        /// Los goles no pueden contener valores negativos.
+        /// No se pueden modificar resultados de torneos finalizados.
+        ///
+        /// Requiere autenticación mediante JWT y rol Admin.
+        /// </remarks>
+        /// <param name="id">Identificador del partido.</param>
+        /// <param name="dto">Goles del equipo local y visitante.</param>
+        /// <returns>Información del resultado actualizado.</returns>        
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}/result")]
         public async Task<IActionResult> UpdateResult(int id, UpdateMatchResultDto dto)
@@ -313,8 +310,22 @@ namespace FutbolLeague.API.Controllers
             return Ok(result);
         }
 
+
         //Put api/Matches/{id}/date
-        //Mejora del método updateDate para validar que la fecha no sea en el pasado y devolver un mensaje más detallado al actualizar la fecha
+        /// <summary>
+        /// Actualiza la fecha y hora de un partido.
+        /// </summary>
+        /// <remarks>
+        /// Modifica la fecha y el horario programados para el partido.
+        ///
+        /// No se puede modificar la fecha de un partido perteneciente a un
+        /// torneo finalizado.
+        ///
+        /// Requiere autenticación mediante JWT y rol Admin.
+        /// </remarks>
+        /// <param name="id">Identificador del partido.</param>
+        /// <param name="dto">Nueva fecha y hora del partido.</param>
+        /// <returns>Información de la fecha actualizada.</returns>
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}/date")]
         public async Task<IActionResult> UpdateDate(int id, UpdateMatchDateDto dto)
@@ -323,8 +334,24 @@ namespace FutbolLeague.API.Controllers
             return Ok(result);
         }
 
+
+
         //Put api/Matches/{id}/status
-        //Mejora del método updateStatus para validar que el estado sea válido y devolver un mensaje más detallado al actualizar el estado
+        /// <summary>
+        /// Actualiza el estado de un partido.
+        /// </summary>
+        /// <remarks>
+        /// Permite modificar el estado actual del partido utilizando uno de
+        /// los valores definidos por MatchStatus.
+        ///
+        /// No se puede modificar el estado de un partido perteneciente a un
+        /// torneo finalizado.
+        ///
+        /// Requiere autenticación mediante JWT y rol Admin.
+        /// </remarks>
+        /// <param name="id">Identificador del partido.</param>
+        /// <param name="status">Nuevo estado del partido.</param>
+        /// <returns>Información del estado actualizado.</returns>
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateStatus(int id, string status)
@@ -335,42 +362,44 @@ namespace FutbolLeague.API.Controllers
 
 
         //Put api/Matches/{id}/field
-        //Put endpoint para asignar una cancha a un partido, validando que no haya conflictos de horarios con otros partidos en la misma cancha
+        /// <summary>
+        /// Asigna o modifica la cancha de un partido.
+        /// </summary>
+        /// <remarks>
+        /// Asigna una cancha al partido indicado o reemplaza la cancha
+        /// previamente asignada.
+        ///
+        /// No se debería permitir modificar la cancha cuando el torneo se
+        /// encuentra finalizado.
+        ///
+        /// Requiere autenticación mediante JWT y rol Admin.
+        /// </remarks>
+        /// <param name="id">Identificador del partido.</param>
+        /// <param name="dto">Datos de la cancha que se asignará al partido.</param>
+        /// <returns>Confirmación de la asignación de la cancha.</returns>
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}/field")]
-        public async Task<IActionResult> AssignField(int id, AssignFieldDto dto)
+        public async Task<IActionResult> AssignField(int id, int fieldId)
         {
-            var match = await _context.Matches.FindAsync(id);
+            var result = await _matchService.UpdateFieldAsync(id, fieldId);
 
-            if (match == null)
-                return NotFound("Partido no encontrado");
-
-            if (!match.MatchDate.HasValue)
-                return BadRequest("El partido no tiene fecha asignada");
-
-            var conflict = await _context.Matches
-                .AnyAsync(m =>
-                    m.Id != id &&
-                    m.FieldId == dto.FieldId &&
-                    m.MatchDate == match.MatchDate);
-
-            if (conflict)
-                return BadRequest("Ya existe un partido en esa cancha y horario");
-
-            match.FieldId = dto.FieldId;
-
-            await _context.SaveChangesAsync();
-
-            return Ok(new
-            {
-                Message = "Cancha asignada correctamente",
-                MatchId = match.Id
-            });
+            return Ok(result);
         }
 
 
         //Get api/Matches/tournament/{tournamentId}/status/{status}
-        //Mejora del método GetByStatus para validar el estado y devolver un mensaje más claro si no hay partidos con ese estado
+        /// <summary>
+        /// Obtiene los partidos de un torneo filtrados por estado.
+        /// </summary>
+        /// <remarks>
+        /// Devuelve los partidos pertenecientes al torneo indicado cuyo estado
+        /// coincide con el valor recibido.
+        ///
+        /// Este endpoint es público y no requiere autenticación.
+        /// </remarks>
+        /// <param name="tournamentId">Identificador del torneo.</param>
+        /// <param name="status">Estado utilizado para filtrar los partidos.</param>
+        /// <returns>Lista de partidos que coinciden con el estado.</returns>
         [HttpGet("tournament/{tournamentId}/status/{status}")]
         public async Task<IActionResult> GetByStatus(int tournamentId, string status)
         {
@@ -404,7 +433,19 @@ namespace FutbolLeague.API.Controllers
 
 
         //Get api/Matches/tournament/{tournamentId}/category/{categoryId}/status/{status}
-        //Mejora del método GetByTournamentCategoryAndStatus para validar el estado y devolver un mensaje más claro si no hay partidos con ese estado, torneo y categoría
+        /// <summary>
+        /// Obtiene los partidos de una categoría filtrados por estado.
+        /// </summary>
+        /// <remarks>
+        /// Devuelve los partidos que pertenecen al torneo y a la categoría
+        /// indicados, filtrados por el estado recibido.
+        ///
+        /// Este endpoint es público y no requiere autenticación.
+        /// </remarks>
+        /// <param name="tournamentId">Identificador del torneo.</param>
+        /// <param name="categoryId">Identificador de la categoría.</param>
+        /// <param name="status">Estado utilizado para filtrar los partidos.</param>
+        /// <returns>Lista de partidos que coinciden con los filtros.</returns>
         [HttpGet("tournament/{tournamentId}/category/{categoryId}/status/{status}")]
         public async Task<IActionResult> GetByTournamentCategoryAndStatus(int tournamentId, int categoryId, string status)
         {

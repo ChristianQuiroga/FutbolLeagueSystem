@@ -12,6 +12,7 @@ using Microsoft.OpenApi; // Agregar el using para OpenAPI/Swagger
 
 using FutbolLeague.Infrastructure.Seeds; // Agregar el using para las semillas de la base de datos
 using FutbolLeague.API.Swagger;
+using System.Reflection; // Configurar Swagger para que incluya comentarios XML en la documentación de la API
 
 
 var builder = WebApplication.CreateBuilder(args); // Crear el constructor de la aplicación web
@@ -29,6 +30,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
+    // Configurar los parámetros de validación del token JWT
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -39,6 +41,33 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!))
+    };
+    // Configurar eventos para manejar respuestas de autenticación y autorización
+    options.Events = new JwtBearerEvents
+    {
+        OnChallenge = async context =>
+        {
+            context.HandleResponse();
+
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.ContentType = "application/json";
+
+            await context.Response.WriteAsJsonAsync(new
+            {
+                Message = "No autorizado. Debe enviar un token JWT válido."
+            });
+        },
+
+        OnForbidden = async context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            context.Response.ContentType = "application/json";
+
+            await context.Response.WriteAsJsonAsync(new
+            {
+                Message = "Acceso denegado. No tiene permisos suficientes."
+            });
+        }
     };
 });
 
@@ -86,13 +115,15 @@ builder.Services.AddSwaggerGen(options =>
 
     options.OperationFilter<AuthorizeOperationFilter>();
 
-    //options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
-    //{
-    //    {
-    //        new OpenApiSecuritySchemeReference("Bearer", document),
-    //        new List<string>()
-    //    }
-    //});
+    var xmlFile =
+    $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+
+    var xmlPath = Path.Combine(
+        AppContext.BaseDirectory,
+        xmlFile
+    );
+
+    options.IncludeXmlComments(xmlPath);
 });
 
 

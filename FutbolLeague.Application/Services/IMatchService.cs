@@ -13,5 +13,6 @@ namespace FutbolLeague.Application.Services
         Task<object> UpdateResultAsync(int matchId, UpdateMatchResultDto dto); // Update home and away scores
         Task<object> UpdateDateAsync(int matchId, UpdateMatchDateDto dto); // Update the date of the match
         Task<object> UpdateStatusAsync(int matchId, string status); // "Scheduled", "InProgress", "Completed"
+        Task<object> UpdateFieldAsync(int matchId, int fieldId);
     }
 }

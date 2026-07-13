@@ -25,6 +25,29 @@ namespace FutbolLeague.API.Controllers
 
         // POST: api/fixtures/generate-by-category
         // Body: { "tournamentId": 1, "categoryId": 2 }
+        /// <summary>
+        /// Genera el fixture de una categoría para un torneo.
+        /// </summary>
+        /// <remarks>
+        /// Crea automáticamente los partidos entre los equipos pertenecientes
+        /// a la categoría y al torneo seleccionados.
+        ///
+        /// El formato del fixture depende de la configuración del torneo:
+        ///
+        /// - SingleRoundRobin: todos contra todos, solo ida.
+        /// - DoubleRoundRobin: todos contra todos, ida y vuelta.
+        ///
+        /// No se permite generar nuevamente un fixture que ya existe.
+        /// Tampoco se puede generar o modificar el fixture de un torneo finalizado.
+        ///
+        /// Requiere autenticación mediante JWT y rol Admin.
+        /// </remarks>
+        /// <param name="dto">
+        /// Datos del torneo y la categoría necesarios para generar el fixture.
+        /// </param>
+        /// <returns>
+        /// Información del fixture generado.
+        /// </returns>
         [Authorize(Roles = "Admin")]
         [HttpPost("generate-by-category")]
         public async Task<IActionResult> GenerateByCategory(GenerateFixtureByCategoryDto dto)
@@ -51,6 +74,25 @@ namespace FutbolLeague.API.Controllers
 
         // POST: api/fixtures/assign-dates
         // Body: { "tournamentId": 1, "categoryId": 2, "startDate": "2024-07-01T10:00:00", "endDate": "2024-07-31T18:00:00" }
+        /// <summary>
+        /// Asigna fechas y horarios a los partidos del fixture.
+        /// </summary>
+        /// <remarks>
+        /// Programa automáticamente los partidos utilizando la fecha inicial,
+        /// los horarios configurados, la duración de cada partido y la pausa
+        /// definida entre los turnos.
+        ///
+        /// No se pueden asignar ni modificar fechas cuando el torneo se
+        /// encuentra finalizado.
+        ///
+        /// Requiere autenticación mediante JWT y rol Admin.
+        /// </remarks>
+        /// <param name="dto">
+        /// Configuración utilizada para asignar las fechas y los horarios.
+        /// </param>
+        /// <returns>
+        /// Confirmación de la asignación de fechas.
+        /// </returns>
         [Authorize(Roles = "Admin")]
         [HttpPost("assign-dates")]
         public async Task<IActionResult> AssignDates(AssignMatchDatesDto dto)
@@ -76,6 +118,27 @@ namespace FutbolLeague.API.Controllers
 
         // DELETE: api/fixtures/tournament/1/category/2
         // Elimina el fixture completo para un torneo y categoría específicos
+        /// <summary>
+        /// Elimina el fixture de una categoría.
+        /// </summary>
+        /// <remarks>
+        /// Elimina los partidos generados para el torneo y la categoría
+        /// seleccionados.
+        ///
+        /// Esta operación no está permitida cuando el torneo se encuentra
+        /// finalizado.
+        ///
+        /// Requiere autenticación mediante JWT y rol Admin.
+        /// </remarks>
+        /// <param name="tournamentId">
+        /// Identificador del torneo.
+        /// </param>
+        /// <param name="categoryId">
+        /// Identificador de la categoría.
+        /// </param>
+        /// <returns>
+        /// Confirmación de la eliminación del fixture.
+        /// </returns>
         [Authorize(Roles = "Admin")]
         [HttpDelete("tournament/{tournamentId}/category/{categoryId}")]
         public async Task<IActionResult> DeleteFixtureByCategory(int tournamentId, int categoryId)
@@ -101,6 +164,27 @@ namespace FutbolLeague.API.Controllers
 
         // POST: api/fixtures/assign-fields
         // Body: { "tournamentId": 1, "categoryId": 2 }
+        /// <summary>
+        /// Asigna canchas a los partidos del fixture.
+        /// </summary>
+        /// <remarks>
+        /// Distribuye las canchas disponibles entre los partidos pertenecientes
+        /// al torneo y a la categoría seleccionados.
+        ///
+        /// No se pueden asignar ni modificar canchas cuando el torneo se
+        /// encuentra finalizado.
+        ///
+        /// Requiere autenticación mediante JWT y rol Admin.
+        /// </remarks>
+        /// <param name="tournamentId">
+        /// Identificador del torneo.
+        /// </param>
+        /// <param name="categoryId">
+        /// Identificador de la categoría.
+        /// </param>
+        /// <returns>
+        /// Confirmación de la asignación de canchas.
+        /// </returns>
         [Authorize(Roles = "Admin")]
         [HttpPost("assign-fields")]
         public async Task<IActionResult> AssignFields(int tournamentId, int categoryId)
@@ -122,5 +206,10 @@ namespace FutbolLeague.API.Controllers
 
             return Ok(result);
         }
+
+        // PENDING: Implementar el endpoint para consultar el fixture por ronda
+        //2. Endpoint para consultar el fixture por ronda
+
+
     }
 }
