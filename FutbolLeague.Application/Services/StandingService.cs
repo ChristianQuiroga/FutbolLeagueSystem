@@ -2,6 +2,7 @@
 using FutbolLeague.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
+
 namespace FutbolLeague.Application.Services
 {
     public class StandingService : IStandingService
@@ -24,6 +25,7 @@ namespace FutbolLeague.Application.Services
 
             var matches = await _context.Matches
                 .Where(m => m.TournamentId == tournamentId &&
+                            m.Status == Domain.MatchStatus.Played && // Only consider matches that have been played
                             m.HomeScore.HasValue &&
                             m.AwayScore.HasValue)
                 .ToListAsync();
@@ -44,6 +46,7 @@ namespace FutbolLeague.Application.Services
 
             var matches = await _context.Matches
                 .Where(m => m.TournamentId == tournamentId &&
+                            m.Status == Domain.MatchStatus.Played &&
                             m.HomeScore.HasValue &&
                             m.AwayScore.HasValue &&
                             teamIds.Contains(m.HomeTeamId) &&
