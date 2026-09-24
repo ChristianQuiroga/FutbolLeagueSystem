@@ -1,86 +1,103 @@
 # ⚽ FutbolLeagueSystem
 
-## Sistema de Gestión de Liga Deportiva
+Backend desarrollado en **.NET / ASP.NET Core** para gestionar una liga de fútbol organizada por categorías.
 
-Backend desarrollado en .NET para gestionar un campeonato de fútbol con:
+El sistema permite administrar equipos, torneos, fixtures, fechas, horarios, canchas, resultados y tabla de posiciones. La API está preparada para integrarse posteriormente con un frontend web o una aplicación móvil.
 
+> Proyecto orientado a práctica profesional backend, separación de responsabilidades y arquitectura limpia.
+
+---
+
+## ✨ Funcionalidades principales
+
+### Gestión de la liga
+
+- CRUD de categorías
+- CRUD de equipos
+- Gestión de torneos
 - Fixture automático por categoría
-- Tabla de posiciones (standings)
-- Equipos por categorías
-- Fechas y horarios de partidos
-- Estado de partidos (Pending / Played)
-- API preparada para app móvil
-- Docker para ejecución portable
+- Resultados de partidos
+- Tabla de posiciones
+- Asignación de fechas y horarios
+- Asignación de canchas
+- Estados de partido
+
+### Formatos de torneo
+
+El sistema soporta:
+
+- `SingleRoundRobin`
+- `DoubleRoundRobin`
+
+### Tabla de posiciones
+
+El cálculo de standings contempla:
+
+- Puntos
+- Diferencia de gol
+- Orden automático
+
+### Estados de partido
+
+- `Pending`
+- `Played`
 
 ---
 
-## 🧱 Arquitectura del Proyecto
-
-![Arquitectura](docs/images/arquitectura.png)
-
-```text
-FutbolLeagueSystem
-│
-├── FutbolLeague.API            → API (Controllers)
-├── FutbolLeague.Application    → DTOs / lógica de aplicación
-├── FutbolLeague.Domain         → Entidades del dominio
-├── FutbolLeague.Infrastructure → EF Core / Base de datos
-```
-
----
-
-## 🔄 Flujo del sistema
-
-![Flujo](docs/images/flujo.png)
-
-```text
-APP → API (.NET) → Base de datos
-          ↑
-      Admin / Swagger
-```
-
----
-
-## ⚙️ Tecnologías utilizadas
+## 🛠️ Tecnologías utilizadas
 
 - ASP.NET Core (.NET 10)
+- C#
 - Entity Framework Core
 - PostgreSQL
 - pgAdmin
 - Docker
+- Swagger / OpenAPI
 
 ---
 
-## 🚀 Funcionalidades actuales
+## 🧱 Arquitectura
 
-✔ CRUD de categorías  
-✔ CRUD de equipos  
-✔ Torneos con formato configurable:
-- SingleRoundRobin
-- DoubleRoundRobin  
+El proyecto está organizado en capas para separar responsabilidades:
 
-✔ Generación de fixture:
-- Por torneo
-- Por categoría  
+```text
+FutbolLeagueSystem
+│
+├── FutbolLeague.API
+│   └── Controllers / entrada HTTP
+│
+├── FutbolLeague.Application
+│   └── DTOs / lógica de aplicación
+│
+├── FutbolLeague.Domain
+│   └── Entidades del dominio
+│
+└── FutbolLeague.Infrastructure
+    └── Entity Framework Core / acceso a datos
+```
 
-✔ Rondas automáticas  
+Flujo simplificado:
 
-✔ Resultados de partidos  
+```text
+Cliente / App
+     │
+     ▼
+ASP.NET Core API
+     │
+     ▼
+Application
+     │
+     ▼
+Domain
+     │
+     ▼
+Infrastructure
+     │
+     ▼
+PostgreSQL
+```
 
-✔ Tabla de posiciones (standings):
-- Puntos
-- Diferencia de gol
-- Orden automático  
-
-✔ Estados de partido:
-- Pending
-- Played  
-
-✔ Asignación de fechas:
-- Horarios reales (mañana + pausa + tarde)
-- Intervalo configurable  
-
-✔ Asignación de canchas  
+La API también puede ser probada y administrada durante el desarrollo mediante Swagger.
 
 ---
 
@@ -88,100 +105,132 @@ APP → API (.NET) → Base de datos
 
 ### Entidades principales
 
-- Category
-- Team
-- Tournament
-- Match
-- Field
+- `Category`
+- `Team`
+- `Tournament`
+- `Match`
+- `Field`
 
-### Relaciones clave
+### Relaciones principales
 
-- Team → Category
-- Team → Tournament
-- Match → Team (Home / Away)
-- Match → Tournament
-- Match → Field
+- `Team` → `Category`
+- `Team` → `Tournament`
+- `Match` → `Team` (`Home` / `Away`)
+- `Match` → `Tournament`
+- `Match` → `Field`
+
+---
+
+## 📅 Fixtures, fechas y horarios
+
+La generación de fixtures puede realizarse:
+
+- por torneo;
+- por categoría.
+
+Las rondas se generan automáticamente.
+
+La asignación de fechas contempla horarios reales de jornada, incluyendo:
+
+- franja de mañana;
+- pausa intermedia;
+- franja de tarde;
+- intervalo configurable entre partidos.
 
 ---
 
 ## 🗄️ Base de datos
 
-![Base de datos](docs/images/db.png)
+Motor utilizado:
 
-Base: `FutbolLeagueDB`
+```text
+PostgreSQL
+```
+
+Base utilizada actualmente:
+
+```text
+FutbolLeagueDB
+```
+
+Entity Framework Core se utiliza para el acceso a datos y gestión de migraciones.
 
 ---
 
 ## 🔄 Migraciones
 
+Crear una nueva migración:
+
 ```bash
 dotnet ef migrations add NombreMigracion --project FutbolLeague.Infrastructure --startup-project FutbolLeague.API
+```
 
+Aplicar migraciones:
+
+```bash
 dotnet ef database update --project FutbolLeague.Infrastructure --startup-project FutbolLeague.API
 ```
 
 ---
 
-## 🧪 Test API
+## 🧪 Prueba de la API
 
-Swagger disponible en:
+Ejecutando el proyecto localmente desde Visual Studio, Swagger está disponible en:
 
 ```text
 https://localhost:7047/swagger
 ```
 
----
-
-# 🐳 Docker
-
-## 📌 Descripción
-
-El proyecto puede ejecutarse en Docker.
-
-👉 Actualmente:
-- API corre en Docker
-- PostgreSQL corre localmente
-
----
-
-## 🚀 Requisitos
-
-- Docker Desktop instalado y en ejecución
-- PostgreSQL local activo
-
----
-
-## ▶️ Ejecutar la API con Docker
-
-Desde la raíz del proyecto:
-
-```bash
-docker compose up --build
-```
-
----
-
-## 🌐 Acceso a la API
+Cuando la API se ejecuta mediante Docker:
 
 ```text
 http://localhost:8080/swagger
 ```
 
-⚠️ Nota:
-- Puerto Docker: **8080**
-- Puerto local Visual Studio: **7047**
-
 ---
 
-## 🔗 Conexión a base de datos
+## 🐳 Docker
 
-La API usa:
+El proyecto puede ejecutar la API dentro de Docker.
+
+### Configuración actual
+
+- API: Docker
+- PostgreSQL: instalación local
+
+### Requisitos
+
+- Docker Desktop instalado y en ejecución
+- PostgreSQL local activo
+
+### Ejecutar
+
+Desde la raíz:
+
+```bash
+docker compose up --build
+```
+
+Acceder a Swagger:
+
+```text
+http://localhost:8080/swagger
+```
+
+### Puertos
+
+- Docker: `8080`
+- Visual Studio / local: `7047`
+
+### Conexión desde Docker hacia PostgreSQL local
+
+La API utiliza:
 
 ```text
 host.docker.internal
 ```
 
-Ejemplo en `appsettings.json`:
+Ejemplo de configuración:
 
 ```json
 "ConnectionStrings": {
@@ -189,25 +238,51 @@ Ejemplo en `appsettings.json`:
 }
 ```
 
----
+> No versionar contraseñas ni credenciales reales. Utilizar valores locales o mecanismos de configuración seguros.
 
-## 🛑 Detener Docker
+### Detener contenedores
 
 ```bash
 docker compose down
 ```
 
----
+### Nota
 
-## ⚠️ Notas Docker
-
-- Docker NO ejecuta PostgreSQL en este setup
-- Se utiliza PostgreSQL local
-- Asegurarse que PostgreSQL esté encendido antes de levantar la API
+En la configuración actual, Docker no ejecuta PostgreSQL. La base se mantiene local, por lo que PostgreSQL debe estar activo antes de iniciar la API.
 
 ---
 
-# 🧩 Creación del proyecto
+## 📁 Estructura de imágenes y documentación
+
+Las imágenes utilizadas por el README se encuentran en:
+
+```text
+docs/images/
+```
+
+Archivos actuales:
+
+- `arquitectura.png`
+- `flujo.png`
+- `db.png`
+
+### Arquitectura
+
+![Arquitectura](docs/images/arquitectura.png)
+
+### Flujo
+
+![Flujo](docs/images/flujo.png)
+
+### Base de datos
+
+![Base de datos](docs/images/db.png)
+
+---
+
+## 🧩 Creación de la solución
+
+La solución fue organizada en proyectos independientes:
 
 ```bash
 dotnet new sln -n FutbolLeagueSystem
@@ -218,9 +293,7 @@ dotnet new classlib -n FutbolLeague.Domain
 dotnet new classlib -n FutbolLeague.Infrastructure
 ```
 
----
-
-## 🔗 Referencias
+Referencias entre proyectos:
 
 ```bash
 dotnet add FutbolLeague.API reference FutbolLeague.Application
@@ -231,54 +304,43 @@ dotnet add FutbolLeague.API reference FutbolLeague.Infrastructure
 
 ---
 
-# 📁 Estructura de imágenes
+## ✅ Estado actual
 
-Crear carpeta:
+Actualmente el backend incluye:
 
-```text
-/docs/images/
-```
-
-Agregar:
-
-- arquitectura.png
-- flujo.png
-- db.png
-
----
-
-# 🚀 Estado actual del proyecto
-
-✔ Backend funcional completo  
-✔ Fixture por categoría  
-✔ Standings calculados  
-✔ Fechas automáticas  
-✔ Docker integrado  
-✔ Listo para integración con frontend/app  
+- CRUD de categorías
+- CRUD de equipos
+- Torneos configurables
+- Fixture por categoría
+- Rondas automáticas
+- Resultados
+- Standings
+- Fechas automáticas
+- Horarios configurables
+- Asignación de canchas
+- Integración con Docker para la API
+- API preparada para futura integración con frontend o app móvil
 
 ---
 
-# 🔥 Próximos pasos
+## 🗺️ Próximos pasos
 
-- Validaciones avanzadas (ej: evitar regenerar fixture con resultados)
+Entre las evoluciones previstas se encuentran:
+
+- Validaciones avanzadas, por ejemplo evitar regenerar fixtures cuando ya existen resultados
 - Asignación automática de canchas por horario
-- Evitar solapamientos de partidos
-- Agregar árbitros
-- Agregar sedes
-- Autenticación (JWT)
-- App móvil / frontend
+- Prevención de solapamientos de partidos
+- Gestión de árbitros
+- Gestión de sedes
+- Autenticación mediante JWT
+- Frontend web / aplicación móvil
 
 ---
 
-# 💡 Notas
+## 👨‍💻 Autor
 
-- Proyecto orientado a arquitectura limpia
-- Backend escalable
-- Preparado para producción futura
-- Ideal para app mobile
+**Christian Quiroga**
 
----
+Software Developer | Backend | .NET | C# | Node.js | REST APIs | SQL
 
-# 📌 Autor
-
-Proyecto desarrollado como práctica profesional backend .NET
+GitHub: [ChristianQuiroga](https://github.com/ChristianQuiroga)
